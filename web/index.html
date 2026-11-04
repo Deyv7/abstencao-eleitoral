@@ -55,7 +55,7 @@
       <div class="cartao nu">
         <p class="chapeu">Eleições 2022 · 1º turno · presidente</p>
         <h1>Um em cada cinco eleitores não foi votar</h1>
-        <p class="numerao"><b data-v="nacional.abst_pct" data-f="pct2" data-contar>20,79%</b><span>de abstenção</span></p>
+        <p class="numerao"><b data-v="nacional.abst_pct" data-f="pct2" data-contar></b><span>de abstenção</span></p>
         <p class="lide">Eram <b data-v="nacional.aptos" data-f="int"></b> eleitores aptos, e <b data-v="nacional.abstencoes" data-f="int"></b> não compareceram. Esta página percorre os <b data-v="nacional.municipios" data-f="int"></b> municípios do país para ver o que acompanha essa ausência e até onde os dados conseguem explicá-la.</p>
         <p class="role" aria-hidden="true"><span></span>Role para começar</p>
       </div>
@@ -92,8 +92,9 @@
       <div class="cartao">
         <p class="num"></p>
         <h2>Um pico não faz o estado</h2>
-        <p>O ponto em destaque é <span data-v="picos.exemplo.nome"></span> (<span data-v="picos.exemplo.uf"></span>), com <b data-v="picos.exemplo.pct" data-f="pct2"></b> de abstenção. Mesmo assim, <span data-uf-nome="picos.exemplo.uf"></span> inteiro ficou em <b data-v="picos.exemplo.uf_pct" data-f="pct2"></b>, a <b data-v="picos.exemplo.uf_posicao_menor" data-f="int"></b>ª menor taxa entre os 27 estados.</p>
-        <p>A taxa do estado soma todos os eleitores, e quem pesa é onde mora mais gente. Os <b data-v="picos.exemplo.grandes_n" data-f="int"></b> maiores municípios do estado reúnem <b data-v="picos.exemplo.grandes_parcela_eleitorado" data-f="fr"></b> do eleitorado e tiveram <b data-v="picos.exemplo.grandes_pct" data-f="pct2"></b> de abstenção. Os outros <b data-v="picos.exemplo.resto_n" data-f="int"></b>, <b data-v="picos.exemplo.resto_pct" data-f="pct2"></b>.</p>
+        <p>O ponto em destaque é <span data-v="picos.exemplo.nome"></span> (<span data-v="picos.exemplo.uf"></span>), com <b data-v="picos.exemplo.pct" data-f="pct2"></b> de abstenção, a <b data-v="picos.exemplo.posicao_no_uf" data-f="int"></b>ª maior taxa entre os <b data-v="picos.exemplo.uf_municipios" data-f="int"></b> municípios do estado. Mesmo assim, <span data-uf-nome="picos.exemplo.uf"></span> ficou em <b data-v="picos.exemplo.uf_pct" data-f="pct2"></b>, a <b data-v="picos.exemplo.uf_posicao_menor" data-f="int"></b>ª menor taxa entre as <b data-v="nacional.ufs" data-f="int"></b> unidades da federação.</p>
+        <p>A distância tem duas partes. A maior é que o pico é exceção: o município típico do estado ficou em <b data-v="picos.exemplo.uf_mediana" data-f="pct2"></b> (a mediana).</p>
+        <p>A outra é que a taxa do estado soma os eleitores, e pesa mais onde mora mais gente. Os <b data-v="picos.exemplo.grandes_n" data-f="int"></b> maiores municípios reúnem <b data-v="picos.exemplo.grandes_parcela_eleitorado" data-f="fr"></b> do eleitorado e tiveram <b data-v="picos.exemplo.grandes_pct" data-f="pct2"></b>; os outros <b data-v="picos.exemplo.resto_n" data-f="int"></b>, <b data-v="picos.exemplo.resto_pct" data-f="pct2"></b>. Por isso o estado fica abaixo da média simples dos seus municípios, que é <b data-v="picos.exemplo.uf_media_simples" data-f="pct2"></b>.</p>
         <p class="nota">Somando os eleitores, as maiores taxas foram em <span data-lista="ufs_maior"></span>. As menores, em <span data-lista="ufs_menor"></span>.</p>
       </div>
     </section>
@@ -103,7 +104,7 @@
         <p class="num"></p>
         <h2>Antes de qualquer conta, uma armadilha</h2>
         <p>A tabela do TSE tem uma linha por zona eleitoral e por cargo em disputa, e repete o número de eleitores aptos em cada uma.</p>
-        <p class="numerao pequeno"><b data-v="armadilha.aptos_sem_filtro" data-f="int" data-contar></b><span>eleitores, somando a coluna sem filtro</span></p>
+        <p class="numerao pequeno"><b data-v="armadilha.aptos_sem_filtro" data-f="int" data-contar></b><span>eleitores, somando a coluna sem filtrar o cargo</span></p>
         <p>É cerca de <b data-v="derivado.razao_armadilha" data-f="int"></b> vezes o eleitorado real. Cada eleitor estaria contado uma vez por cargo.</p>
       </div>
     </section>
@@ -132,7 +133,7 @@
         <p class="num"></p>
         <h2>Escolaridade</h2>
         <p>No eixo horizontal está a parte do eleitorado que é analfabeta ou só lê e escreve.</p>
-        <p>A regressão compara municípios com a mesma região, porte, idade do eleitorado, densidade e renda. Nessas condições, cada ponto percentual a mais nessa parte acompanha <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].coef" data-f="dec2"></b> ponto a mais de abstenção. Do 1º ao 3º quartil, a diferença estimada é de <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].q13" data-f="dec1"></b> pontos.</p>
+        <p>A regressão compara municípios com a mesma região, porte, idade do eleitorado, densidade e PIB por habitante. Nessas condições, cada ponto percentual a mais nessa parte acompanha <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].coef" data-f="dec2"></b> ponto a mais de abstenção. Do 1º ao 3º quartil, a diferença estimada é de <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].q13" data-f="dec1"></b> pontos.</p>
         <p class="nota">É associação, não causa. E o dado é do município, não do eleitor.</p>
       </div>
     </section>
@@ -178,10 +179,10 @@
       <div class="cartao">
         <p class="num"></p>
         <h2>Vizinhos erram juntos, mesmo do outro lado da divisa</h2>
-        <p>Cada ponto agora tem a cor da média do erro dos seus <b data-v="espacial.k" data-f="int"></b> vizinhos mais próximos, que ficam em média a <b data-v="espacial.distancia_mediana_km" data-f="int"></b> km. As manchas mostram onde o modelo erra para o mesmo lado em regiões inteiras.</p>
-        <p>O I de Moran mede essa semelhança de -1 a 1. Para os erros da regressão, deu <b data-v="espacial.moran_residuo" data-f="dec2"></b>; embaralhando os erros ao acaso 999 vezes, o maior valor foi <b data-v="espacial.maior_sorteio" data-f="dec2"></b>. A média dos vizinhos explica <b data-v="espacial.r2_vizinhos" data-f="fr"></b> dos erros, bem mais que o estado.</p>
-        <p>Olhando só vizinhos de outro estado (<b data-v="espacial.outra_uf_n" data-f="int"></b> municípios têm algum), a correlação ainda é <b data-v="espacial.outra_uf_corr" data-f="dec2"></b>. Há um padrão regional que as variáveis não medem e que a divisa não corta.</p>
-        <p class="nota">Refazendo os testes com grupos de municípios próximos no lugar dos estados, nenhuma conclusão muda: o agrupamento por estado já era o mais conservador.</p>
+        <p>Cada ponto agora tem a cor da média do erro dos seus <b data-v="espacial.k" data-f="int"></b> vizinhos mais próximos, que ficam a uma distância mediana de <b data-v="espacial.distancia_mediana_km" data-f="int"></b> km. As manchas mostram onde o modelo erra para o mesmo lado em regiões inteiras.</p>
+        <p>O I de Moran mede essa semelhança: fica perto de zero quando não há padrão e sobe quando vizinhos se parecem. Para os erros da regressão, deu <b data-v="espacial.moran_residuo" data-f="dec2"></b>; embaralhando os erros ao acaso <span data-v="espacial.permutacoes" data-f="int"></span> vezes, o maior valor foi <b data-v="espacial.maior_sorteio" data-f="dec2"></b>. A média dos vizinhos explica <b data-v="espacial.r2_vizinhos" data-f="fr"></b> dos erros; o estado, <b data-v="regressao.r2_residuo_uf" data-f="fr"></b>.</p>
+        <p>Olhando só vizinhos de outro estado (<b data-v="espacial.outra_uf_n" data-f="int"></b> municípios têm algum), a correlação é <b data-v="espacial.outra_uf_corr" data-f="dec2"></b>, e <b data-v="espacial.outra_uf_corr_sem_uf" data-f="dec2"></b> descontando a média de cada estado. Há um padrão regional que as variáveis não medem e que a divisa não corta.</p>
+        <p class="nota">Refazendo os testes com grupos de municípios próximos no lugar dos estados, nenhuma associação do resultado principal desaparece. Os valores-p ficam menores, e com 60 grupos a região Norte passa a ter associação. O agrupamento por estado é o mais conservador, e por isso segue como o principal.</p>
       </div>
     </section>
 
@@ -203,7 +204,7 @@
         <ul class="limites">
           <li>Tudo aqui é associação. Nenhum desses números mostra que uma coisa causa a outra.</li>
           <li>O dado é do município, não do eleitor. Um município com mais idosos e mais abstenção não prova que foram os idosos que faltaram.</li>
-          <li>O erro agrupado usa <b data-v="nacional.ufs" data-f="int"></b> estados, pouco para esse método.</li>
+          <li>O erro agrupado usa <b data-v="nacional.ufs" data-f="int"></b> grupos (os 26 estados e o Distrito Federal), poucos para esse método.</li>
           <li>Mais da metade da variação continua sem explicação, e o que falta tem um padrão regional que nenhuma das variáveis mede.</li>
         </ul>
       </div>

@@ -355,6 +355,8 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
 .painel-estado .metades i { justify-self: center; border-radius: 50%; background: var(--tinta-2); }
 .painel-estado .metades i.grande { width: 13px; height: 13px; }
 .painel-estado .metades i.pequeno { width: 5px; height: 5px; }
+.painel-estado .metades i.media { width: 13px; height: 2px; border-radius: 1px; background: var(--apagado); }
+.painel-estado .clicado .pos { grid-column: 1 / -1; font-size: 11.5px; color: var(--apagado); }
 .painel-estado .metades p { margin: 0; font-size: 13px; color: var(--tinta); }
 .painel-estado .metades small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--apagado); }
 .painel-estado .metades b { font: 500 17px/1 var(--mono); color: var(--tinta); }

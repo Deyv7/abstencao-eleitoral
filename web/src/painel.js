@@ -127,15 +127,24 @@ export function criarPainel({ raiz, municipios, resumo, reduzido }) {
     const parcelaMun = municipios.aptos[i] / d.aptos;
     const total = Object.keys(resumo.ufs).length;
 
+    // Posição do município entre os do estado (1 = maior taxa).
+    const posicao = membros.filter((j) => municipios.abst[j] > pctMun).length + 1;
+
+    // Quanto este município move a taxa do estado: a conta refeita sem ele, com as
+    // contagens exatas de eleitores e abstenções.
     let leitura;
-    if (d.resto.n === 0) {
+    if (d.municipios === 1) {
       leitura = `${nome} é o único município do ${UF_NOMES[uf]}: a taxa da cidade é a do estado.`;
     } else {
-      const quem = d.metade.n === 1 ? `Só ${d.metade.nomes[0]} reúne` : `Os ${d.metade.n} maiores municípios reúnem`;
+      const sem = (100 * (d.abstencoes - municipios.abstencoes[i])) / (d.aptos - municipios.aptos[i]);
+      const efeito = d.pct - sem;
       const peso = parcelaMun < 0.001 ? 'menos de 0,1%' : formatar(parcelaMun, 'fr');
-      leitura = `${quem} metade do eleitorado e pesa${d.metade.n === 1 ? '' : 'm'} tanto quanto os outros ${formatar(d.resto.n, 'int')} juntos. `
-        + `${nome} tem ${peso} dos eleitores do estado: ${Math.abs(dif) < 0.05 ? 'fica na média' : `fica ${pp(dif)} ${dif > 0 ? 'acima' : 'abaixo'}`} sem mover a taxa do estado.`;
-      if (parcelaMun >= 0.2) leitura = `Só ${nome} tem ${formatar(parcelaMun, 'fr')} dos eleitores do estado. Por isso a taxa do estado fica perto da dela.`;
+      const lado = Math.abs(dif) < 0.05 ? 'ficou praticamente na taxa do estado'
+        : `ficou ${pp(dif)} ${dif > 0 ? 'acima' : 'abaixo'} da taxa do estado`;
+      leitura = `${nome} tem ${peso} dos eleitores do estado e ${lado}. `
+        + (Math.abs(efeito) < 0.05
+          ? `Sem ${nome}, a taxa do estado mudaria menos de 0,05 p.p.: um município desse tamanho quase não pesa na conta.`
+          : `Sem ${nome}, a taxa do estado seria ${formatar(sem, 'pct2')}, ${pp(efeito)} ${efeito > 0 ? 'a menos' : 'a mais'}.`);
     }
 
     conteudo.innerHTML = `
@@ -149,22 +158,24 @@ export function criarPainel({ raiz, municipios, resumo, reduzido }) {
       </div>
       <div class="bloco">
         <p class="rotulo">${d.posicao_menor <= total / 2
-          ? `<b>${ordinal(d.posicao_menor)} menor</b> taxa entre os ${total} estados`
-          : `<b>${ordinal(total + 1 - d.posicao_menor)} maior</b> taxa entre os ${total} estados`}</p>
-        <svg class="ranking" role="img" aria-label="Taxa dos ${total} estados, da menor para a maior"></svg>
+          ? `<b>${ordinal(d.posicao_menor)} menor</b> taxa entre as ${total} unidades da federação`
+          : `<b>${ordinal(total + 1 - d.posicao_menor)} maior</b> taxa entre as ${total} unidades da federação`}</p>
+        <svg class="ranking" role="img" aria-label="Taxa das ${total} unidades da federação, da menor para a maior"></svg>
       </div>
       <div class="clicado">
         <span class="nome">${nome}</span>
         <span class="valor">${formatar(pctMun, 'pct2')}</span>
         <span class="dif ${dif >= 0 ? 'acima' : 'abaixo'}">${dif >= 0 ? '+' : '−'}${pp(dif)} vs. estado</span>
+        ${d.municipios > 1 ? `<span class="pos">${ordinal(posicao)} maior taxa entre os ${formatar(d.municipios, 'int')} do estado</span>` : ''}
       </div>
       <figure class="bloco">
         <svg class="enxame" role="img" aria-label="Abstenção de cada município do estado"></svg>
         <figcaption>Cada círculo é um município do estado, do tamanho do seu eleitorado.</figcaption>
       </figure>
       ${d.resto.n ? `<div class="metades">
-        <div><i class="grande"></i><p>Metade dos eleitores<small>${lista(d.metade.nomes, d.metade.n)}</small></p><b>${formatar(d.metade.pct, 'pct2')}</b></div>
-        <div><i class="pequeno"></i><p>A outra metade<small>${formatar(d.resto.n, 'int')} municípios menores</small></p><b>${formatar(d.resto.pct, 'pct2')}</b></div>
+        <div><i class="grande"></i><p>${d.metade.n === 1 ? 'Maior município' : `${d.metade.n} maiores municípios`}<small>${lista(d.metade.nomes, d.metade.n)} · ${formatar(d.metade.parcela, 'fr')} dos eleitores</small></p><b>${formatar(d.metade.pct, 'pct2')}</b></div>
+        <div><i class="pequeno"></i><p>Demais municípios<small>${formatar(d.resto.n, 'int')} municípios · ${formatar(1 - d.metade.parcela, 'fr')} dos eleitores</small></p><b>${formatar(d.resto.pct, 'pct2')}</b></div>
+        <div><i class="media"></i><p>Média simples dos municípios<small>sem pesar o eleitorado</small></p><b>${formatar(d.media_simples, 'pct2')}</b></div>
       </div>` : ''}
       <p class="leitura">${leitura}</p>`;
 

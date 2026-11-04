@@ -73,15 +73,25 @@ def moran_com_teste(x: np.ndarray, idx: np.ndarray, n_perm: int = N_PERMUTACOES,
 
 
 def correlacao_com_vizinhos_de_outra_uf(resid: np.ndarray, uf: np.ndarray,
-                                        idx: np.ndarray) -> dict:
-    """Só os vizinhos do outro lado da divisa: a UF não explica essa semelhança."""
+                                        idx: np.ndarray, resid_sem_uf: np.ndarray) -> dict:
+    """Só os vizinhos do outro lado da divisa.
+
+    Parte da correlação pode vir do nível de cada estado (um estado inteiro acima do
+    previsto ao lado de outro também acima). Por isso a mesma conta é repetida com o
+    resíduo menos a média da UF: o que sobra é semelhança que a UF não explica.
+    """
     outra = uf[idx] != uf[:, None]
     tem = outra.any(axis=1)
-    somas = np.where(outra, resid[idx], 0.0).sum(axis=1)
-    media_outra = somas[tem] / outra[tem].sum(axis=1)
+
+    def corr(x: np.ndarray) -> float:
+        somas = np.where(outra, x[idx], 0.0).sum(axis=1)
+        media_outra = somas[tem] / outra[tem].sum(axis=1)
+        return float(np.corrcoef(x[tem], media_outra)[0, 1])
+
     return {
         "municipios_com_vizinho_de_outra_uf": int(tem.sum()),
-        "correlacao": float(np.corrcoef(resid[tem], media_outra)[0, 1]),
+        "correlacao": corr(resid),
+        "correlacao_sem_media_da_uf": corr(resid_sem_uf),
     }
 
 
@@ -115,12 +125,14 @@ def erro_agrupado_espacial(df: pd.DataFrame) -> dict:
 
     Os grupos atravessam as divisas entre estados. Se um coeficiente só é
     significativo com o agrupamento por UF, a significância dele depende de ignorar
-    a semelhança entre vizinhos de estados diferentes.
+    a semelhança entre vizinhos de estados diferentes. Usa t com G-1 graus de
+    liberdade, como a regressão principal (agrupada por UF), para a comparação ser
+    entre iguais.
     """
     saida = {}
     for n in GRUPOS_ESPACIAIS:
         ajuste = smf.ols(FORMULA, data=df).fit(cov_type="cluster",
-                                               cov_kwds={"groups": grupos_espaciais(df, n)})
+                                               cov_kwds={"groups": grupos_espaciais(df, n)}, use_t=True)
         saida[f"clusters_{n}"] = {t: {"coef_pp": float(ajuste.params[t]), "p": float(ajuste.pvalues[t])}
                                   for t in ajuste.params.index if t != "Intercept"}
     return saida
@@ -152,7 +164,8 @@ def analisar(ano: int) -> dict:
             for k in K_SENSIBILIDADE},
         "moran_residuo_sem_media_da_uf": moran_com_teste(resid_sem_uf, idx),
         "r2_residuo_explicado_pela_media_dos_vizinhos": float(np.corrcoef(resid, lag)[0, 1] ** 2),
-        "vizinhos_de_outra_uf": correlacao_com_vizinhos_de_outra_uf(resid, uf, idx),
+        "vizinhos_de_outra_uf": correlacao_com_vizinhos_de_outra_uf(resid, uf, idx, resid_sem_uf),
+        "distancia_media_vizinho_km": float(np.mean(dist)),
         "erro_agrupado_espacial": erro_agrupado_espacial(df),
         "validacao_cruzada": validacao_espacial(df),
     }
