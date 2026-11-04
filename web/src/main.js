@@ -165,6 +165,14 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   const painel = criarPainel({ raiz: raizPainel, municipios, resumo, reduzido });
   const convite = document.querySelector('.convite');
   convite.lastChild.textContent = `${toque ? 'Toque' : 'Clique'} num ponto para ver o estado`;
+  if (toque) {
+    for (const el of document.querySelectorAll('[data-toque]')) el.textContent = el.dataset.toque;
+    // No toque não existe "tirar o mouse": a dica some quando a página rola.
+    window.addEventListener('scroll', () => { if (mouse) { mouse = null; pendente = true; } }, { passive: true });
+  }
+  // O convite aparece uma vez só. Some de vez depois de ficar uns segundos visível,
+  // no primeiro clique num ponto, ou ao sair dos mapas clicáveis depois de ter sido visto.
+  let conviteVisto = 0, conviteFeito = false;
   let estadoSel = -1, abertoEm = -1, tokenEstado = 0;
   const curvaFoco = [0.22, 1, 0.36, 1];
 
@@ -176,6 +184,7 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     tokenEstado++;
     estadoSel = i;
     abertoEm = passoAtual;
+    conviteFeito = true;
     foco.uf = k;
     foco.painel = largo ? 360 + 66 : 0;
     if (!jaAberto && foco.v < 0.01) { foco.x = q.x; foco.y = q.y; foco.z = q.z; }
@@ -345,20 +354,49 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   // Sair da seção de busca desfaz o foco no município.
   ScrollTrigger.create({ trigger: '#explorar', start: 'top 60%', onLeaveBack: () => escolher(-1) });
 
+  // No celular os cartões rolam por cima da legenda e do convite. Os dois somem enquanto
+  // um cartão estiver no lugar deles e voltam quando a cena aparece de novo.
+  const cartoes = passos.map((p) => p.querySelector('.cartao'));
+  function cartaoCobre(y0, y1) {
+    for (let k = Math.max(passoAtual - 1, 0); k <= Math.min(passoAtual + 1, cartoes.length - 1); k++) {
+      const c = cartoes[k];
+      // Um cartão que já saiu de vista fica apagado (opacidade 0), mas continua no lugar.
+      if (!c || c.classList.contains('nu') || Number(getComputedStyle(c).opacity) < 0.2) continue;
+      const r = c.getBoundingClientRect();
+      if (r.top < y1 && r.bottom > y0) return true;
+    }
+    return false;
+  }
+  let legLivre = 1;
+
   // ---------- laço de desenho ----------
   let tempo = 0;
   gsap.ticker.add((_, dt) => {
     if (!reduzido) tempo += dt / 1000;
     estadoEm(window.scrollY);
+    const celular = window.innerWidth < 900;
     // No celular o título fica por cima da cena: a nuvem fica centrada e mais apagada.
-    if (window.innerWidth < 900) { S.alvoX = 0; S.brilho *= 1 - 0.45 * S.wNuvem; }
-    for (const [k, el] of Object.entries(legendas)) el.style.opacity = S[k].toFixed(3);
+    if (celular) { S.alvoX = 0; S.brilho *= 1 - 0.45 * S.wNuvem; }
+    const legAlvo = celular && cartaoCobre(40, 150) ? 0 : 1;
+    legLivre = reduzido ? legAlvo : legLivre + (legAlvo - legLivre) * 0.2;
+    for (const [k, el] of Object.entries(legendas)) el.style.opacity = (S[k] * legLivre).toFixed(3);
     // Recalcula a dica a cada quadro enquanto o mouse está na cena: com o scroll, os
     // pontos andam por baixo de um mouse parado.
     if (mouse) pendente = true;
     // Sair do capítulo (ou dos mapas clicáveis) fecha o estado.
     if (painel.aberto() && (S.clicavel < 0.5 || passoAtual !== abertoEm)) fecharEstado();
-    convite.style.opacity = (S.clicavel * (1 - foco.ufDim) * (S.clicavel > 0.98 ? 1 : 0)).toFixed(3);
+    if (!conviteFeito) {
+      if (S.clicavel > 0.98 && foco.ufDim < 0.01) {
+        const rc = convite.getBoundingClientRect();
+        const livre = !(celular && cartaoCobre(rc.top - 12, rc.bottom + 12));
+        if (livre) conviteVisto += dt;
+        if (conviteVisto > 6500) conviteFeito = true;
+        convite.classList.toggle('visivel', livre && !conviteFeito);
+      } else {
+        if (conviteVisto > 1500) conviteFeito = true;
+        convite.classList.remove('visivel');
+      }
+    } else convite.classList.remove('visivel');
     atualizarDica();
     cena.selecionar(selBusca >= 0 ? selBusca : estadoSel >= 0 ? estadoSel : S.destaque > 0.02 ? exemplo : -1);
     foco.selDim = selBusca >= 0 ? foco.v : S.destaque * (1 - foco.ufDim);
@@ -368,9 +406,47 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   return { medir };
 }
 
+// No celular o cartão fica embaixo da cena, e um cartão longo cobre a cena inteira antes
+// de acabar. Quando o cartão passa de 40% da altura da tela, os trechos marcados com
+// data-extra no HTML (os de apoio, sempre no fim do cartão) vão para trás de
+// "Continuar lendo".
+function recolherCartoes() {
+  const celular = window.innerWidth < 900;
+  const limite = window.innerHeight * 0.4;
+  for (const c of document.querySelectorAll('.passo:not(.abertura):not(.fim):not(#explorar) .cartao:not(.largo)')) {
+    const antigo = c.querySelector(':scope > .mais');
+    if (antigo) {
+      c.querySelector(':scope > .ler-mais').remove();
+      c.append(...antigo.children);
+      antigo.remove();
+    }
+    const extras = [...c.querySelectorAll(':scope > [data-extra]')];
+    if (!celular || !extras.length || c.offsetHeight <= limite) continue;
+    const mais = document.createElement('div');
+    mais.className = 'mais';
+    mais.hidden = true;
+    mais.id = `mais-${c.closest('.passo').dataset.cena}`;
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'ler-mais';
+    botao.setAttribute('aria-expanded', 'false');
+    botao.setAttribute('aria-controls', mais.id);
+    botao.textContent = 'Continuar lendo';
+    mais.append(...extras);
+    c.append(mais, botao);
+    botao.addEventListener('click', () => {
+      mais.hidden = !mais.hidden;
+      botao.setAttribute('aria-expanded', String(!mais.hidden));
+      botao.textContent = mais.hidden ? 'Continuar lendo' : 'Mostrar menos';
+      ScrollTrigger.refresh();
+    });
+  }
+}
+
 async function iniciar() {
   const { municipios, resumo, contorno } = await carregar();
   preencherTextos(resumo);
+  recolherCartoes();
   if (REPO_URL) {
     const p = document.querySelector('.repo');
     p.hidden = false;
@@ -403,13 +479,19 @@ async function iniciar() {
     return c ? c.getBoundingClientRect().right + 32 : 520;
   };
   cena.redimensionar(larguraCartoes());
-  const historia = iniciarHistoria({ cena, municipios, resumo });
-  let espera;
+  iniciarHistoria({ cena, municipios, resumo });
+  let espera, larguraAntes = window.innerWidth;
   window.addEventListener('resize', () => {
     clearTimeout(espera);
-    espera = setTimeout(() => { cena.redimensionar(larguraCartoes()); historia.medir(); }, 120);
+    espera = setTimeout(() => {
+      // A barra do navegador do celular muda só a altura; recolher de novo nesse caso
+      // fecharia um cartão que a pessoa abriu para ler.
+      if (window.innerWidth !== larguraAntes) { larguraAntes = window.innerWidth; recolherCartoes(); }
+      cena.redimensionar(larguraCartoes());
+      ScrollTrigger.refresh();
+    }, 120);
   });
-  document.fonts?.ready.then(() => ScrollTrigger.refresh());
+  document.fonts?.ready.then(() => { recolherCartoes(); ScrollTrigger.refresh(); });
 }
 
 iniciar();

@@ -274,7 +274,13 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
   .passo { align-items: flex-end; padding: 0 16px 9vh; min-height: 110vh; }
   .passo.largo { min-height: 140vh; }
   .abertura { align-items: center; }
-  .cartao, .cartao.largo { max-width: none; padding: 22px 20px 20px; }
+  .cartao, .cartao.largo { max-width: none; padding: 20px 20px 18px; }
+  .cartao:not(.nu) p { font-size: 15.5px; line-height: 1.55; }
+  .cartao .nota { font-size: 13.5px; }
+  .cartao .num { margin-bottom: 10px; }
+  .cartao:not(.nu) h2 { font-size: 1.5rem; }
+  /* Repete o título do eixo do gráfico, que no celular fica logo acima do cartão. */
+  .cartao .so-largo { display: none; }
   .trilho { display: none; }
   .legendas { right: 16px; left: 16px; bottom: auto; top: 58px; }
   .legenda { left: auto; right: 0; top: 0; bottom: auto; width: 200px; }
@@ -370,8 +376,9 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
   background: rgba(14, 16, 22, 0.78); border: 1px solid var(--linha);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   font: 500 11.5px/1 var(--mono); letter-spacing: 0.03em; color: var(--tinta-2); white-space: nowrap;
-  pointer-events: none; opacity: 0;
+  pointer-events: none; opacity: 0; transition: opacity 0.6s ease;
 }
+.convite.visivel { opacity: 1; }
 .convite::before {
   content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--acento);
   box-shadow: 0 0 0 0 rgba(245, 176, 65, 0.6); animation: pulso 1.8s ease-out infinite;
@@ -398,7 +405,7 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
 #dica em.clique { display: block; margin-top: 6px; font: 500 10.5px/1.2 var(--mono); font-style: normal; letter-spacing: 0.05em; text-transform: uppercase; color: var(--acento); }
 
 /* ---------- fim: agradecimento e volta ao portfólio ---------- */
-.fim { justify-content: center; text-align: center; min-height: 110vh; }
+.fim { justify-content: center; text-align: center; min-height: 110vh; overflow-x: clip; }
 .fim .cartao { margin: 0 auto; max-width: 640px; position: relative; }
 /* Um véu escuro atrás do texto, para os pontos da nuvem não disputarem a leitura. */
 .fim .cartao::before {
@@ -433,4 +440,22 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
 }
 @media (prefers-reduced-motion: reduce) {
   .voltar, .voltar svg, .contato { transition: none; }
+}
+
+/* ---------- cartão longo no celular: o resto fica atrás de um botão ---------- */
+.ler-mais {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; padding: 6px 0;
+  background: none; border: 0; cursor: pointer;
+  font: 500 12px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--acento);
+}
+.ler-mais::after {
+  content: ""; width: 6px; height: 6px; margin-top: -3px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg);
+  transition: transform 0.25s ease, margin 0.25s ease;
+}
+.ler-mais[aria-expanded="true"]::after { transform: rotate(-135deg); margin-top: 3px; }
+.ler-mais:focus-visible { outline: 2px solid var(--acento); outline-offset: 4px; border-radius: 4px; }
+.cartao .mais { margin-top: 0.9em; }
+@media (prefers-reduced-motion: reduce) {
+  .convite, .ler-mais::after { transition: none; }
 }
