@@ -43,7 +43,10 @@ attribute float aTopo;
 #endif
 varying vec3 vCor;
 varying float vAlpha;
+varying float vFlare;
+uniform float uCintila;
 ${RAMPA_GLSL}
+float hash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
 void main() {
   float ang = uTempo * 0.035;
   float cs = cos(ang), sn = sin(ang);
@@ -64,6 +67,20 @@ void main() {
            + uRegCor[int(aRegiao + 0.5)] * uC[2]
            + divergente(mix(aResid, aResidViz, uSuave)) * uC[3];
   float a = uBrilho;
+
+  // Cintilação: cada município pisca no seu ritmo e na sua fase (sorteados pelo
+  // índice, então são sempre os mesmos). De vez em quando um ponto dá um lampejo,
+  // e uma faixa de luz atravessa o país devagar. uTempo fica parado com
+  // prefers-reduced-motion, e aí nada disso se move.
+  float fase = hash(aIdx) * 6.2832;
+  float ritmo = 0.5 + hash(aIdx + 7.13) * 1.3;
+  float pisca = 0.5 + 0.5 * sin(uTempo * ritmo + fase);
+  float lampejo = pow(0.5 + 0.5 * sin(uTempo * ritmo * 0.37 + fase * 1.7), 28.0);
+  float onda = smoothstep(0.82, 1.0, sin(p.x * 2.1 + p.y * 1.3 - uTempo * 0.75));
+  a *= 1.0 + uCintila * (0.32 * (pisca - 0.5) + 0.35 * onda + 0.6 * lampejo);
+  cor = mix(cor, vec3(1.0), uCintila * (0.12 * onda + 0.4 * lampejo));
+  vFlare = uCintila * (lampejo + 0.4 * onda);
+
   if (uSel > -0.5 && !sel) a *= 1.0 - 0.75 * uSelDim;
   // Estado aberto no painel: o resto do país fica como contorno apagado.
   bool foraUf = uUf > -0.5 && abs(aUf - uUf) > 0.5;
@@ -74,8 +91,10 @@ void main() {
   vAlpha = a * uHaste * (0.04 + 0.3 * aTopo);
 #else
   float s = uTam * mix(1.0, 0.55 + aPeso * 2.1, uTamAptos);
+  s *= 1.0 + uCintila * (0.1 * (pisca - 0.5) + 0.45 * lampejo + 0.12 * onda);
   if (foraUf) s *= 1.0 - 0.3 * uUfDim;
-  if (sel && uSel > -0.5) { s = max(s * 3.2, 6.5); cor = mix(cor, vec3(1.0), 0.55); a = 1.0; }
+  // O ponto selecionado pulsa, para o olho achar onde ele está.
+  if (sel && uSel > -0.5) { s = max(s * 3.2, 6.5) * (1.0 + 0.14 * sin(uTempo * 3.2)); cor = mix(cor, vec3(1.0), 0.55); a = 1.0; vFlare = 0.5 + 0.5 * sin(uTempo * 3.2); }
   gl_PointSize = s * uEscala / -mv.z;
   vCor = cor;
   vAlpha = a;
@@ -85,6 +104,7 @@ void main() {
 const FRAG_PONTO = /* glsl */ `
 varying vec3 vCor;
 varying float vAlpha;
+varying float vFlare;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
   float d = length(c);
@@ -92,7 +112,8 @@ void main() {
   // Núcleo nítido com a cor do dado e um halo fraco em volta, no lugar de um bloom de
   // tela inteira (que acinzentava o fundo e lavava as cores das regiões densas).
   float nucleo = smoothstep(0.26, 0.17, d);
-  float halo = pow(1.0 - d * 2.0, 2.2) * 0.22;
+  // No lampejo o halo abre: é o brilho que se vê piscar.
+  float halo = pow(1.0 - d * 2.0, 2.2 - 0.9 * vFlare) * (0.22 + 0.55 * vFlare);
   float a = clamp(nucleo + halo, 0.0, 1.0);
   gl_FragColor = vec4(vCor * (1.0 + 0.25 * nucleo), vAlpha * a);
 }`;
@@ -163,6 +184,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     uSuave: { value: 0 },
     uUf: { value: -1 },
     uUfDim: { value: 0 },
+    uCintila: { value: 1 },
   };
   // As cores das regiões vêm em sRGB e o shader escreve sem conversão.
   uniforms.uRegCor.value.forEach((c) => c.convertLinearToSRGB());
@@ -435,6 +457,9 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     const aprox = 1 - (foco.z ?? 0.55) * foco.v;
     u.uEscala.value = escalaBase * (0.3 + 0.7 * aprox);
     u.uSelDim.value = foco.selDim;
+    // A nuvem já gira: ali os pontos não cintilam. Nas outras cenas, que ficam
+    // paradas, a cintilação entra conforme a nuvem sai.
+    u.uCintila.value = 1 - S.wNuvem;
     u.uUf.value = foco.uf;
     u.uUfDim.value = foco.ufDim;
     // Com o painel do estado aberto à direita, o conteúdo se centra no espaço entre
