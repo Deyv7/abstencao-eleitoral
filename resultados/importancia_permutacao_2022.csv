@@ -1,0 +1,11 @@
+variavel,aumento_mae_pp_medio,desvio_entre_partes,descricao
+log2_aptos,0.435914,0.238601,Eleitorado apto (cada vez que dobra)
+pct_70_mais,0.364147,0.150383,% do eleitorado com 70 anos ou mais
+pct_baixa_escolaridade,0.247908,0.25389,% analfabeto ou lê e escreve
+regiao,0.235845,0.274056,Região
+log2_densidade,0.163231,0.11284,Densidade demográfica (cada vez que dobra)
+pct_16_17,0.15682,0.111514,% do eleitorado com 16 ou 17 anos
+pct_superior,0.0851186,0.0958849,% com superior completo
+pct_feminino,0.0574023,0.0826846,% do eleitorado feminino
+razao_aptos_populacao,0.0149265,0.0375117,Eleitores aptos por habitante
+log2_pib_per_capita,0.0126796,0.0594855,PIB per capita (cada vez que dobra)

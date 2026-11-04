@@ -1,0 +1,67 @@
+{
+  "ano": 2018,
+  "seed": 42,
+  "n_partes": 5,
+  "validacoes": {
+    "kfold": {
+      "media": {
+        "mae_pp_empilhado": 4.991473977284258,
+        "r2_empilhado": -0.0003960182248741173,
+        "mae_pp_media_partes": 4.991473977284258,
+        "r2_media_partes": -0.0010947936566772399,
+        "r2_desvio_partes": 0.0010512612820215198
+      },
+      "regressao_linear": {
+        "mae_pp_empilhado": 3.167275741710442,
+        "r2_empilhado": 0.5726572583391656,
+        "mae_pp_media_partes": 3.1672757417104416,
+        "r2_media_partes": 0.5718755521368195,
+        "r2_desvio_partes": 0.01949865318375356
+      },
+      "gradient_boosting": {
+        "mae_pp_empilhado": 2.6686774450707613,
+        "r2_empilhado": 0.6835576510127866,
+        "mae_pp_media_partes": 2.6686774450707618,
+        "r2_media_partes": 0.6829723325540604,
+        "r2_desvio_partes": 0.012492349884450206
+      },
+      "random_forest": {
+        "mae_pp_empilhado": 2.671466689786594,
+        "r2_empilhado": 0.6828467408414951,
+        "mae_pp_media_partes": 2.6714666897865946,
+        "r2_media_partes": 0.6822724206595563,
+        "r2_desvio_partes": 0.013276800694921194
+      }
+    },
+    "groupkfold_uf": {
+      "media": {
+        "mae_pp_empilhado": 5.0511547855480465,
+        "r2_empilhado": -0.025999616427664574,
+        "mae_pp_media_partes": 5.085136574070407,
+        "r2_media_partes": -0.08308919763003306,
+        "r2_desvio_partes": 0.12758767195591153
+      },
+      "regressao_linear": {
+        "mae_pp_empilhado": 3.674322146560695,
+        "r2_empilhado": 0.44214265454007873,
+        "mae_pp_media_partes": 3.735260747106719,
+        "r2_media_partes": 0.37403189710146834,
+        "r2_desvio_partes": 0.17202821874282156
+      },
+      "gradient_boosting": {
+        "mae_pp_empilhado": 3.3389235010238516,
+        "r2_empilhado": 0.5195352734512189,
+        "mae_pp_media_partes": 3.3428482340935255,
+        "r2_media_partes": 0.47715021341531827,
+        "r2_desvio_partes": 0.08672647884291713
+      },
+      "random_forest": {
+        "mae_pp_empilhado": 3.3161048881572013,
+        "r2_empilhado": 0.5244682791400725,
+        "mae_pp_media_partes": 3.327813260379243,
+        "r2_media_partes": 0.48280697057672883,
+        "r2_desvio_partes": 0.07316038510946687
+      }
+    }
+  }
+}

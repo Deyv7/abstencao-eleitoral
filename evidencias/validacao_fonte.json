@@ -1,0 +1,490 @@
+{
+  "grupos_cargo_tipo": [
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "conselheiro distrital",
+      "tipo_eleicao": "eleicao conselho distrital 2018 fn",
+      "linhas": 1,
+      "municipios": 1,
+      "ufs": 1,
+      "linhas_exterior": 0,
+      "aptos": 2735,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "deputado distrital",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 19,
+      "municipios": 1,
+      "ufs": 1,
+      "linhas_exterior": 0,
+      "aptos": 2081218,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "deputado estadual",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6083,
+      "municipios": 5569,
+      "ufs": 26,
+      "linhas_exterior": 0,
+      "aptos": 144669311,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "deputado federal",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 146750529,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "governador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 146750529,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "presidente",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6273,
+      "municipios": 5570,
+      "ufs": 28,
+      "linhas_exterior": 171,
+      "aptos": 147306295,
+      "linhas_sem_conciliacao": 33
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "senador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 146750529,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 1,
+      "cargo": "senador",
+      "tipo_eleicao": "eleicao suplementar senador - mt",
+      "linhas": 146,
+      "municipios": 141,
+      "ufs": 1,
+      "linhas_exterior": 0,
+      "aptos": 2317102,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 2,
+      "cargo": "governador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 3375,
+      "municipios": 2993,
+      "ufs": 14,
+      "linhas_exterior": 0,
+      "aptos": 92401806,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2018,
+      "turno": 2,
+      "cargo": "presidente",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6273,
+      "municipios": 5570,
+      "ufs": 28,
+      "linhas_exterior": 171,
+      "aptos": 147306294,
+      "linhas_sem_conciliacao": 33
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "conselheiro distrital",
+      "tipo_eleicao": "eleicao conselho distrital 2022",
+      "linhas": 1,
+      "municipios": 1,
+      "ufs": 1,
+      "linhas_exterior": 0,
+      "aptos": 3297,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "deputado distrital",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 19,
+      "municipios": 1,
+      "ufs": 1,
+      "linhas_exterior": 0,
+      "aptos": 2193783,
+      "linhas_sem_conciliacao": 0
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "deputado estadual",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6083,
+      "municipios": 5569,
+      "ufs": 26,
+      "linhas_exterior": 0,
+      "aptos": 153363720,
+      "linhas_sem_conciliacao": 1
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "deputado federal",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 155557503,
+      "linhas_sem_conciliacao": 1
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "governador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 155557503,
+      "linhas_sem_conciliacao": 1
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "presidente",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6283,
+      "municipios": 5570,
+      "ufs": 28,
+      "linhas_exterior": 181,
+      "aptos": 156454011,
+      "linhas_sem_conciliacao": 42
+    },
+    {
+      "ano": 2022,
+      "turno": 1,
+      "cargo": "senador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6102,
+      "municipios": 5570,
+      "ufs": 27,
+      "linhas_exterior": 0,
+      "aptos": 155557503,
+      "linhas_sem_conciliacao": 1
+    },
+    {
+      "ano": 2022,
+      "turno": 2,
+      "cargo": "governador",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 2992,
+      "municipios": 2710,
+      "ufs": 12,
+      "linhas_exterior": 0,
+      "aptos": 82854881,
+      "linhas_sem_conciliacao": 1
+    },
+    {
+      "ano": 2022,
+      "turno": 2,
+      "cargo": "presidente",
+      "tipo_eleicao": "eleicao ordinaria",
+      "linhas": 6283,
+      "municipios": 5570,
+      "ufs": 28,
+      "linhas_exterior": 181,
+      "aptos": 156454011,
+      "linhas_sem_conciliacao": 42
+    }
+  ],
+  "divergencias_presidente": [
+    {
+      "ano": 2022,
+      "sigla_uf": "AM",
+      "id_municipio": "1302603",
+      "zona": "68",
+      "aptos": 87671,
+      "comparecimento": 72962,
+      "abstencoes": 14625,
+      "diferenca": 84
+    }
+  ],
+  "dicionario_perfil": [
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "-3",
+      "valor": "inválido                      "
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "0",
+      "valor": "não informado"
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "1",
+      "valor": "solteiro(a)"
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "3",
+      "valor": "casado(a)"
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "5",
+      "valor": "viúvo(a)"
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "7",
+      "valor": "separado(a) judicialmente"
+    },
+    {
+      "nome_coluna": "estado_civil",
+      "chave": "9",
+      "valor": "divorciado(a)"
+    },
+    {
+      "nome_coluna": "genero",
+      "chave": "0",
+      "valor": "não informado"
+    },
+    {
+      "nome_coluna": "genero",
+      "chave": "2",
+      "valor": "masculino"
+    },
+    {
+      "nome_coluna": "genero",
+      "chave": "4",
+      "valor": "feminino"
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "-3",
+      "valor": "inválido                      "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "1600",
+      "valor": "16 anos                       "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "1700",
+      "valor": "17 anos                       "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "1800",
+      "valor": "18 anos                       "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "1900",
+      "valor": "19 anos                       "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "2000",
+      "valor": "20 anos                       "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "2124",
+      "valor": "21 a 24 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "2529",
+      "valor": "25 a 29 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "3034",
+      "valor": "30 a 34 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "3539",
+      "valor": "35 a 39 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "4044",
+      "valor": "40 a 44 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "4549",
+      "valor": "45 a 49 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "5054",
+      "valor": "50 a 54 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "5559",
+      "valor": "55 a 59 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "6064",
+      "valor": "60 a 64 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "6569",
+      "valor": "65 a 69 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "7074",
+      "valor": "70 a 74 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "7579",
+      "valor": "75 a 79 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "8084",
+      "valor": "80 a 84 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "8589",
+      "valor": "85 a 89 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "9094",
+      "valor": "90 a 94 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "9599",
+      "valor": "95 a 99 anos                  "
+    },
+    {
+      "nome_coluna": "grupo_idade",
+      "chave": "9999",
+      "valor": "100 anos ou mais              "
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "0",
+      "valor": "não informado"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "1",
+      "valor": "analfabeto"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "2",
+      "valor": "lê e escreve"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "3",
+      "valor": "ensino fundamental incompleto"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "4",
+      "valor": "ensino fundamental completo"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "5",
+      "valor": "ensino médio incompleto"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "6",
+      "valor": "ensino médio completo"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "7",
+      "valor": "ensino superior incompleto"
+    },
+    {
+      "nome_coluna": "instrucao",
+      "chave": "8",
+      "valor": "ensino superior completo"
+    },
+    {
+      "nome_coluna": "situacao_biometria",
+      "chave": "-3",
+      "valor": "inválido                      "
+    },
+    {
+      "nome_coluna": "situacao_biometria",
+      "chave": "0",
+      "valor": "sem biometria"
+    },
+    {
+      "nome_coluna": "situacao_biometria",
+      "chave": "1",
+      "valor": "biométrico"
+    },
+    {
+      "nome_coluna": "situacao_biometria",
+      "chave": "2",
+      "valor": "híbrido"
+    }
+  ],
+  "aptos_presidente_vs_governador": [
+    {
+      "ano": 2018,
+      "diferenca_total": 55426,
+      "municipios_com_diferenca": 939,
+      "municipios_presidente_menor": 0
+    },
+    {
+      "ano": 2022,
+      "diferenca_total": 201153,
+      "municipios_com_diferenca": 1581,
+      "municipios_presidente_menor": 0
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+termo,descricao,coef_pp,ep_cluster_uf,p_cluster_uf,ic95_inf,ic95_sup,ep_hc3,p_hc3,iqr_variavel,efeito_q1_q3_pp
+Intercept,Intercepto,1.08283,10.6981,0.920155,-20.9074,23.0731,2.68461,0.686693,,
+regiao_Centro-Oeste,Região Centro-Oeste (vs. Sudeste),0.110028,1.01813,0.914771,-1.98277,2.20283,0.200483,0.583133,,
+regiao_Nordeste,Região Nordeste (vs. Sudeste),-4.64665,0.94721,4.31103e-05,-6.59367,-2.69963,0.218006,8.35879e-101,,
+regiao_Norte,Região Norte (vs. Sudeste),-2.46219,1.38311,0.0867375,-5.30521,0.380838,0.268004,4.03419e-20,,
+regiao_Sul,Região Sul (vs. Sudeste),-3.41136,1.10044,0.00461084,-5.67335,-1.14936,0.128518,3.02101e-155,,
+pct_16_17,% do eleitorado com 16 ou 17 anos,-0.55729,0.617557,0.375124,-1.8267,0.712117,0.127558,1.24862e-05,1.05456,-0.587697
+pct_70_mais,% do eleitorado com 70 anos ou mais,0.256865,0.12046,0.042588,0.00925544,0.504474,0.0260566,6.33204e-23,3.63449,0.933571
+pct_feminino,% do eleitorado feminino,0.164844,0.212537,0.444982,-0.272033,0.601721,0.0482194,0.00062937,2.39983,0.395598
+pct_baixa_escolaridade,% analfabeto ou lê e escreve,0.216787,0.0387754,7.11912e-06,0.137083,0.296491,0.00998886,1.92719e-104,16.3423,3.5428
+pct_superior,% com superior completo,-0.0699942,0.0655054,0.295104,-0.204642,0.064654,0.0184983,0.000154435,4.77816,-0.334444
+log2_aptos,Eleitorado apto (cada vez que dobra),1.09904,0.156597,1.87947e-07,0.777154,1.42093,0.0468258,8.0875e-122,2.02732,2.22811
+log2_pib_per_capita,PIB per capita (cada vez que dobra),-0.198069,0.164958,0.240683,-0.537145,0.141007,0.0717959,0.00580174,1.5727,-0.311503
+razao_aptos_populacao,Eleitores aptos por habitante,0.734559,1.63319,0.656605,-2.62252,4.09164,0.587084,0.210862,0.143555,0.105449
+log2_densidade,Densidade demográfica (cada vez que dobra),-0.688537,0.135343,2.66923e-05,-0.96674,-0.410335,0.0396443,1.44506e-67,2.24478,-1.54561

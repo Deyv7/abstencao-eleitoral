@@ -1,0 +1,17 @@
+# Credenciais: nunca versionar
+*.json.key
+*-key.json
+service-account*.json
+application_default_credentials.json
+.env
+.streamlit/secrets.toml
+
+# Python
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+
+# Sistema
+.DS_Store
+Thumbs.db

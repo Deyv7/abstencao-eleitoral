@@ -1,0 +1,65 @@
+{
+  "ano": 2022,
+  "n_municipios": 5570,
+  "n_ufs": 27,
+  "formula": "abstencao_pct ~ pct_16_17 + pct_70_mais + pct_feminino + pct_baixa_escolaridade + pct_superior + log2_aptos + log2_pib_per_capita + razao_aptos_populacao + log2_densidade + C(regiao, Treatment(\"Sudeste\"))",
+  "r2": 0.42954284360323125,
+  "r2_ajustado": 0.42820808063830007,
+  "r2_so_uf": 0.34488532548940254,
+  "r2_so_regiao": 0.18148004144394814,
+  "media_abstencao_pp": 21.271412514199618,
+  "desvio_abstencao_pp": 4.720345573787631,
+  "vif_maximo": 3.6729194055446643,
+  "residuos": {
+    "breusch_pagan_estatistica": 267.8960142537137,
+    "breusch_pagan_p": 1.2137130642276263e-49,
+    "jarque_bera_estatistica": 130.5302178001733,
+    "jarque_bera_p": 4.526091650297714e-29,
+    "assimetria": 0.3120596709298157,
+    "curtose": 3.4158163953260328,
+    "desvio_padrao_residuo_pp": 3.5693801245674712,
+    "pct_residuos_alem_de_2dp": 4.793536804308797,
+    "r2_residuo_explicado_por_uf": 0.1863205251617277
+  },
+  "robustez_efeito_fixo_uf": {
+    "r2": 0.5421524962206206,
+    "coeficientes": {
+      "pct_16_17": {
+        "coef_pp": -0.31166273204603206,
+        "p_cluster_uf": 0.31379233426876807
+      },
+      "pct_70_mais": {
+        "coef_pp": 0.32197925025291607,
+        "p_cluster_uf": 0.0012228279473568103
+      },
+      "pct_feminino": {
+        "coef_pp": 0.2737167375414966,
+        "p_cluster_uf": 0.13374267530328252
+      },
+      "pct_baixa_escolaridade": {
+        "coef_pp": 0.20960121732012527,
+        "p_cluster_uf": 1.2359628915811157e-07
+      },
+      "pct_superior": {
+        "coef_pp": -0.1478866554198178,
+        "p_cluster_uf": 0.00048526373761496866
+      },
+      "log2_aptos": {
+        "coef_pp": 1.0189360665907314,
+        "p_cluster_uf": 1.8729254747652742e-08
+      },
+      "log2_pib_per_capita": {
+        "coef_pp": -0.18033907279232342,
+        "p_cluster_uf": 0.1632650944039076
+      },
+      "razao_aptos_populacao": {
+        "coef_pp": 2.698628372191598,
+        "p_cluster_uf": 0.07042323731485785
+      },
+      "log2_densidade": {
+        "coef_pp": -0.6370514046570349,
+        "p_cluster_uf": 0.00036551269483934906
+      }
+    }
+  }
+}
