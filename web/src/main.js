@@ -51,6 +51,9 @@ const ESTADOS = {
   modelos: { wMapa: 1, cResid: 1, brilho: 0.18, dist: 1.1 },
   limites: { wNuvem: 1, cNeutro: 0.6, cAbst: 0.4, brilho: 0.4, tam: 1.2, dist: 1.15 },
   explorar: { ...mapa, cAbst: 1, legAbst: 1 },
+  // O fim volta à nuvem do começo, agora centrada.
+  // alvoX positivo desfaz o deslocamento da câmera para a direita dos cartões.
+  fim: { wNuvem: 1, cNeutro: 0.5, cAbst: 0.5, tam: 1.25, brilho: 0.5, dist: 1.05, alvoX: 0.42 },
 };
 for (const k of Object.keys(ESTADOS)) ESTADOS[k] = { ...BASE, ...ESTADOS[k] };
 const CHAVES = Object.keys(BASE);
