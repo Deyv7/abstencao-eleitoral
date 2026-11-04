@@ -353,13 +353,6 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     for (const p of picos.maiores) prender(p, 'pico', 'nomeado');
     prender(picos.exemplo, 'exemplo', 'nomeado exemplo');
   }
-  // Fernando de Noronha fica a 370 km da costa: sem nome, o ponto no oceano parece erro.
-  const noronha = municipios.nome.findIndex((nm, k) => nm === 'Fernando de Noronha' && municipios.uf[k] === 'PE');
-  if (noronha >= 0) {
-    rotulo('Noronha (PE)', 0, 0, 'ilha', 'ilha', 'direita');
-    presos.push({ r: rotulos.at(-1), idx: noronha });
-  }
-
   // O município clicado: o texto e o índice mudam a cada clique.
   prender({ nome: '', uf: '', pct: 0, idx: 0 }, 'clicado', 'nomeado exemplo');
   const clicado = presos.at(-1);
@@ -431,7 +424,6 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       y: S.eixoY, reg: S.wReg * S.eixoY, esc: S.wEsc * S.eixoY, tam: S.wTam * S.eixoY, idade: S.wIdade * S.eixoY,
       pico: S.picos * S.wMapa * (1 - foco.ufDim), exemplo: S.destaque * S.wMapa * (1 - foco.ufDim),
       clicado: foco.ufDim * S.wMapa,
-      ilha: S.wMapa * (1 - S.fantasma) * (1 - foco.ufDim) * (1 - S.destaque),
     };
     for (const p of presos) {
       if ((pesos[p.r.grupo] || 0) < 0.02) continue;
@@ -447,12 +439,6 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       }
       v.copy(r.pos).project(camera);
       let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;
-      // Um rótulo preso a um ponto que saiu da tela (Noronha no celular) some, em vez
-      // de ser empurrado para cima de outro lugar do mapa.
-      if (r.grupo === 'ilha' && (celular || x < 0 || x > W - 50)) {
-        if (r.visivel) { r.el.style.opacity = '0'; r.visivel = false; }
-        continue;
-      }
       const w = r.el.offsetWidth;
       if (r.ancora === 'direita') x -= w; else x -= w / 2;
       x = Math.min(Math.max(x, 6), W - w - 6);
@@ -467,10 +453,6 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
           if (x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y) y = o.y - h - 4;
         }
         postos.push({ x, y, w, h });
-      } else if (r.el.classList.contains('ilha')) {
-        // Acima e à esquerda do ponto, por cima do mar e não da costa.
-        x += 4;
-        y -= r.el.offsetHeight + 6;
       } else {
         y -= 6;
       }
