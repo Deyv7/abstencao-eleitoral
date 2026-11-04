@@ -2,7 +2,7 @@
 // de posições (nuvem, mapa, colunas por região, três dispersões) e de cores (neutra,
 // abstenção, região, resíduo). A mistura roda na GPU; o scroll só muda os pesos.
 import * as THREE from 'three';
-import { CORES_REGIAO, X_REGIOES, yAbst } from './dados.js';
+import { CORES_REGIAO, X_REGIOES, yAbst, projetar } from './dados.js';
 
 const FUNDO = 0x0b0d12;
 
@@ -148,7 +148,7 @@ void main() {
   gl_FragColor = vec4(vCor, vA * smoothstep(0.5, 0.1, d) * 0.8);
 }`;
 
-export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotulosEl, picos }) {
+export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotulosEl, picos, contorno }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setClearColor(FUNDO, 1);
   const cena = new THREE.Scene();
@@ -221,6 +221,55 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
   const hastes = new THREE.LineSegments(geoH, matHastes);
   hastes.frustumCulled = false;
   cena.add(hastes);
+
+  // ---------- divisas dos estados (IBGE), no chão do mapa ----------
+  // Os pontos ficam no centro de cada município; na Amazônia eles estão a 150-230 km
+  // uns dos outros e, sem o contorno, parecem soltos do país.
+  const uniC = { uMapa: { value: 0 }, uUf: uniforms.uUf, uUfDim: uniforms.uUfDim };
+  let divisas = null;
+  if (contorno) {
+    const nSeg = contorno.externa.length;
+    const posC = new Float32Array(nSeg * 6), ext = new Float32Array(nSeg * 2);
+    const ua = new Float32Array(nSeg * 2), ub = new Float32Array(nSeg * 2);
+    const ufIdx = new Map(L.ufLista.map((u, k) => [u, k]));
+    for (let k = 0; k < nSeg; k++) {
+      const [x1, y1] = projetar(contorno.seg[k * 4], contorno.seg[k * 4 + 1]);
+      const [x2, y2] = projetar(contorno.seg[k * 4 + 2], contorno.seg[k * 4 + 3]);
+      posC.set([x1, y1, 0, x2, y2, 0], k * 6);
+      ext[k * 2] = ext[k * 2 + 1] = contorno.externa[k];
+      ua[k * 2] = ua[k * 2 + 1] = ufIdx.get(contorno.ufa[k]);
+      ub[k * 2] = ub[k * 2 + 1] = ufIdx.get(contorno.ufb[k]);
+    }
+    const geoC = new THREE.BufferGeometry();
+    geoC.setAttribute('position', new THREE.BufferAttribute(posC, 3));
+    geoC.setAttribute('aExterna', new THREE.BufferAttribute(ext, 1));
+    geoC.setAttribute('aUfA', new THREE.BufferAttribute(ua, 1));
+    geoC.setAttribute('aUfB', new THREE.BufferAttribute(ub, 1));
+    divisas = new THREE.LineSegments(geoC, new THREE.ShaderMaterial({
+      uniforms: uniC, transparent: true, depthWrite: false,
+      vertexShader: /* glsl */ `
+        uniform float uMapa, uUf, uUfDim;
+        attribute float aExterna, aUfA, aUfB;
+        varying float vA;
+        varying float vDoUf;
+        void main() {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          float doUf = (uUf > -0.5 && (abs(aUfA - uUf) < 0.5 || abs(aUfB - uUf) < 0.5)) ? 1.0 : 0.0;
+          // Costa e fronteira mais visíveis que as divisas; com um estado aberto, o
+          // contorno dele acende e o resto apaga.
+          float base = mix(0.11, 0.3, aExterna);
+          vA = uMapa * mix(base, mix(base * 0.45, 0.75, doUf), uUfDim);
+          vDoUf = doUf * uUfDim;
+        }`,
+      fragmentShader: /* glsl */ `
+        varying float vA;
+        varying float vDoUf;
+        void main() { gl_FragColor = vec4(mix(vec3(0.925, 0.902, 0.855), vec3(0.96, 0.69, 0.255), vDoUf), vA); }`,
+    }));
+    divisas.frustumCulled = false;
+    divisas.renderOrder = -1;
+    cena.add(divisas);
+  }
 
   // ---------- camadas da armadilha (o mesmo mapa contado várias vezes) ----------
   const extras = Math.max(camadasArmadilha - 1, 1);
@@ -304,6 +353,13 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     for (const p of picos.maiores) prender(p, 'pico', 'nomeado');
     prender(picos.exemplo, 'exemplo', 'nomeado exemplo');
   }
+  // Fernando de Noronha fica a 370 km da costa: sem nome, o ponto no oceano parece erro.
+  const noronha = municipios.nome.findIndex((nm, k) => nm === 'Fernando de Noronha' && municipios.uf[k] === 'PE');
+  if (noronha >= 0) {
+    rotulo('Noronha (PE)', 0, 0, 'ilha', 'ilha', 'direita');
+    presos.push({ r: rotulos.at(-1), idx: noronha });
+  }
+
   // O município clicado: o texto e o índice mudam a cada clique.
   prender({ nome: '', uf: '', pct: 0, idx: 0 }, 'clicado', 'nomeado exemplo');
   const clicado = presos.at(-1);
@@ -375,6 +431,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       y: S.eixoY, reg: S.wReg * S.eixoY, esc: S.wEsc * S.eixoY, tam: S.wTam * S.eixoY, idade: S.wIdade * S.eixoY,
       pico: S.picos * S.wMapa * (1 - foco.ufDim), exemplo: S.destaque * S.wMapa * (1 - foco.ufDim),
       clicado: foco.ufDim * S.wMapa,
+      ilha: S.wMapa * (1 - S.fantasma) * (1 - foco.ufDim) * (1 - S.destaque),
     };
     for (const p of presos) {
       if ((pesos[p.r.grupo] || 0) < 0.02) continue;
@@ -390,6 +447,12 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       }
       v.copy(r.pos).project(camera);
       let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;
+      // Um rótulo preso a um ponto que saiu da tela (Noronha no celular) some, em vez
+      // de ser empurrado para cima de outro lugar do mapa.
+      if (r.grupo === 'ilha' && (celular || x < 0 || x > W - 50)) {
+        if (r.visivel) { r.el.style.opacity = '0'; r.visivel = false; }
+        continue;
+      }
       const w = r.el.offsetWidth;
       if (r.ancora === 'direita') x -= w; else x -= w / 2;
       x = Math.min(Math.max(x, 6), W - w - 6);
@@ -404,6 +467,10 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
           if (x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y) y = o.y - h - 4;
         }
         postos.push({ x, y, w, h });
+      } else if (r.el.classList.contains('ilha')) {
+        // Acima e à esquerda do ponto, por cima do mar e não da costa.
+        x += 4;
+        y -= r.el.offsetHeight + 6;
       } else {
         y -= 6;
       }
@@ -473,6 +540,8 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       }
     }
     u.uSuave.value = S.suave;
+    uniC.uMapa.value = S.wMapa * (1 - S.fantasma);
+    if (divisas) divisas.visible = uniC.uMapa.value > 0.01;
     uniF.uFantasma.value = S.fantasma;
     uniF.uEspalhar.value = S.espalhar;
     fantasma.visible = S.fantasma > 0.01;

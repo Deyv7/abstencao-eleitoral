@@ -369,7 +369,7 @@ function iniciarHistoria({ cena, municipios, resumo }) {
 }
 
 async function iniciar() {
-  const { municipios, resumo } = await carregar();
+  const { municipios, resumo, contorno } = await carregar();
   preencherTextos(resumo);
   if (REPO_URL) {
     const p = document.querySelector('.repo');
@@ -389,6 +389,7 @@ async function iniciar() {
       camadasArmadilha: resumo.derivado.razao_armadilha,
       rotulosEl: document.getElementById('rotulos'),
       picos: resumo.picos,
+      contorno,
     });
   } catch (erro) {
     console.error('WebGL indisponível; a história segue só com o texto.', erro);

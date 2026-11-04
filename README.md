@@ -218,6 +218,7 @@ Em 2018 o I dos resíduos foi 0,433.
 
 - A rolagem é lida pelo GSAP ScrollTrigger, com Lenis para suavizar. A transição entre dois estados da cena é calculada a partir da posição do scroll, então subir e descer a página dá sempre o mesmo resultado.
 - A entrada dos cartões, os contadores e os gráficos de coeficientes e de modelos são animados com Motion.
+- As divisas dos estados desenhadas sob os pontos vêm da malha de UFs do IBGE em qualidade mínima (API `servicodados.ibge.gov.br/api/v3/malhas`, baixada em 04/11/2026 para `data/brutos/malha_uf_ibge.geojson`). O exportador grava cada aresta uma vez em `web/public/dados/contorno.json`. Fernando de Noronha não aparece nessa malha e tem um rótulo próprio, porque o ponto fica a 370 km da costa.
 - Nenhum número que vem dos dados é escrito à mão no HTML; o HTML só fixa limiares e escalas (30%, 5%, a legenda de 10% a 35%). `src/exportar_web.py` lê `data/processados/` e `resultados/` e grava `web/public/dados/`, e a página preenche os textos a partir desses arquivos. O exportador confere que a soma sem filtro é 778.687.320 e a com filtro é 155.758.656.
 - Com `prefers-reduced-motion`, a página não faz animações automáticas nem rolagem suavizada. Sem WebGL, o texto continua legível.
 

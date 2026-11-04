@@ -96,6 +96,11 @@ const escala = (v, [a, b], [c, d]) => c + ((v - a) / (b - a)) * (d - c);
 const limitar = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
 export const yAbst = (pct) => escala(pct, Y_DOMINIO, [-0.9, 0.9]);
+
+// Projeção do mapa: equirretangular corrigida pela latitude média do país. A mesma
+// para os municípios e para as divisas, senão uma não cai em cima da outra.
+const LON0 = -52.5, LAT0 = -14.2, KX = Math.cos((15 * Math.PI) / 180), DIV = 19;
+export const projetar = (lon, lat) => [((lon - LON0) * KX) / DIV, (lat - LAT0) / DIV];
 export const X_REGIOES = [-0.88, -0.44, 0, 0.44, 0.88];
 
 export function dominios(m) {
@@ -134,14 +139,11 @@ export function montarLayouts(m) {
   };
   const ufIdx = new Map(L.ufLista.map((u, k) => [u, k]));
 
-  // Mapa: equirretangular corrigida pela latitude média do país.
-  const lon0 = -52.5, lat0 = -14.2, k = Math.cos((15 * Math.PI) / 180), div = 19;
   const lmin = dom.tam[0], lmax = dom.tam[1];
 
   for (let i = 0; i < n; i++) {
     const j = i * 3;
-    L.mapa[j] = ((m.lon[i] - lon0) * k) / div;
-    L.mapa[j + 1] = (m.lat[i] - lat0) / div;
+    [L.mapa[j], L.mapa[j + 1]] = projetar(m.lon[i], m.lat[i]);
 
     // Nuvem: elipsoide achatado, mais denso no centro.
     const u = rnd(), v = rnd(), w = Math.cbrt(rnd());
@@ -197,9 +199,10 @@ export function montarLayouts(m) {
 
 export async function carregar() {
   const base = import.meta.env.BASE_URL;
-  const [municipios, resumo] = await Promise.all([
+  const [municipios, resumo, contorno] = await Promise.all([
     fetch(`${base}dados/municipios.json`).then((r) => r.json()),
     fetch(`${base}dados/resumo.json`).then((r) => r.json()),
+    fetch(`${base}dados/contorno.json`).then((r) => r.json()).catch(() => null),
   ]);
-  return { municipios, resumo };
+  return { municipios, resumo, contorno };
 }

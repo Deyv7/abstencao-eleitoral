@@ -62,6 +62,45 @@ def _arquivo_municipios(mun: pd.DataFrame) -> dict:
     }
 
 
+# Código IBGE da UF -> sigla.
+CODIGOS_UF = {"11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO",
+              "21": "MA", "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL",
+              "28": "SE", "29": "BA", "31": "MG", "32": "ES", "33": "RJ", "35": "SP", "41": "PR",
+              "42": "SC", "43": "RS", "50": "MS", "51": "MT", "52": "GO", "53": "DF"}
+
+
+def _contorno() -> dict:
+    """Divisas dos estados para desenhar por baixo dos pontos.
+
+    Fonte: malha de UFs do IBGE em qualidade mínima (API servicodados, baixada em
+    04/11/2026 para data/brutos/malha_uf_ibge.geojson). Cada aresta aparece uma vez:
+    `externa` = 1 quando só um estado a usa (costa ou fronteira do país), 0 quando é
+    divisa entre dois. `ufa`/`ufb` são as siglas dos estados de cada lado.
+    """
+    g = json.loads((RAIZ / "data" / "brutos" / "malha_uf_ibge.geojson").read_text(encoding="utf-8"))
+    arestas: dict[tuple, list[str]] = {}
+    for f in g["features"]:
+        uf = CODIGOS_UF[f["properties"]["codarea"]]
+        geo = f["geometry"]
+        poligonos = [geo["coordinates"]] if geo["type"] == "Polygon" else geo["coordinates"]
+        for poligono in poligonos:
+            for anel in poligono:
+                pts = [(round(x, 3), round(y, 3)) for x, y in anel]
+                for a, b in zip(pts, pts[1:]):
+                    if a == b:
+                        continue
+                    chave = (a, b) if a < b else (b, a)
+                    arestas.setdefault(chave, []).append(uf)
+    assert len({u for ufs in arestas.values() for u in ufs}) == 27
+    seg, externa, ufa, ufb = [], [], [], []
+    for (a, b), ufs in arestas.items():
+        seg += [a[0], a[1], b[0], b[1]]
+        externa.append(1 if len(ufs) == 1 else 0)
+        ufa.append(ufs[0])
+        ufb.append(ufs[-1])
+    return {"fonte": "IBGE, malha de UFs, qualidade mínima", "seg": seg, "externa": externa, "ufa": ufa, "ufb": ufb}
+
+
 def _armadilha() -> dict:
     """Soma dos aptos sem filtrar cargo, a partir da validação da fonte."""
     val = json.loads((RAIZ / "evidencias" / "validacao_fonte.json").read_text(encoding="utf-8"))
@@ -242,7 +281,8 @@ def main() -> None:
     # A soma sem filtro tem que ser a mesma que docs/validacao-fonte.md registra.
     assert arm["aptos_sem_filtro"] == 778_687_320, arm
     assert arm["aptos_com_filtro"] == 155_758_656, arm
-    for nome, conteudo in (("municipios.json", _arquivo_municipios(mun)), ("resumo.json", resumo)):
+    for nome, conteudo in (("municipios.json", _arquivo_municipios(mun)), ("resumo.json", resumo),
+                           ("contorno.json", _contorno())):
         caminho = DESTINO / nome
         caminho.write_text(json.dumps(conteudo, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(f"[web] {caminho.relative_to(RAIZ)} ({caminho.stat().st_size / 1024:.0f} KB)")
