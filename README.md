@@ -1,6 +1,6 @@
 # O que explica a abstenção
 
-Autor: Deyvid Prado.
+Autor: Deyvid Prado. Página narrada da análise: https://deyv7.github.io/abstencao-eleitoral/
 
 Análise estatística e modelo de machine learning sobre a abstenção eleitoral nos municípios brasileiros: extração do BigQuery (Base dos Dados) para Parquet, testes de dados com pytest, regressão linear com statsmodels, modelos de árvores com scikit-learn e um app em Streamlit que roda sobre os arquivos locais.
 
@@ -214,6 +214,8 @@ O padrão atravessa as divisas, então há algo regional que as variáveis não 
 Em 2018 o I dos resíduos foi 0,433.
 
 ## Página de storytelling
+
+No ar em https://deyv7.github.io/abstencao-eleitoral/. O workflow `.github/workflows/pages.yml` gera `web/dist/` e publica no GitHub Pages a cada push na `main` que mexe em `web/`.
 
 `web/` tem uma versão narrada da análise, para ser lida rolando a página. Cada município é um ponto numa cena em three.js. Conforme a página desce, os pontos formam o mapa, ganham a cor da abstenção e se reorganizam em colunas por região e em gráficos de dispersão contra escolaridade, tamanho do eleitorado e idade. Depois a cor passa a mostrar o erro da regressão, e a página termina com uma busca por município.
 
