@@ -191,6 +191,15 @@ streamlit run app/app.py
 
 O app tem quatro abas: mapa dos municípios e tabela por UF, distribuição da abstenção, efeitos da regressão e importância do modelo, e busca de município, que mostra a abstenção observada, a prevista pelo gradient boosting treinado sem a UF daquele município e as variáveis comparadas à mediana nacional. O mapa usa os centroides do diretório da Base dos Dados.
 
+## Página de storytelling
+
+`web/` tem uma versão narrada da análise, para ser lida rolando a página. Cada município é um ponto numa cena em three.js. Conforme a página desce, os pontos formam o mapa, ganham a cor da abstenção e se reorganizam em colunas por região e em gráficos de dispersão contra escolaridade, tamanho do eleitorado e idade. Depois a cor passa a mostrar o erro da regressão, e a página termina com uma busca por município.
+
+- A rolagem é lida pelo GSAP ScrollTrigger, com Lenis para suavizar. A transição entre dois estados da cena é calculada a partir da posição do scroll, então subir e descer a página dá sempre o mesmo resultado.
+- A entrada dos cartões, os contadores e os gráficos de coeficientes e de modelos são animados com Motion.
+- Nenhum número é escrito à mão no HTML. `src/exportar_web.py` lê `data/processados/` e `resultados/` e grava `web/public/dados/`, e a página preenche os textos a partir desses arquivos. O exportador confere que a soma sem filtro é 778.687.320 e a com filtro é 155.758.656.
+- Com `prefers-reduced-motion`, a página não faz animações automáticas nem rolagem suavizada. Sem WebGL, o texto continua legível.
+
 ## Limitações
 
 - São dados agregados por município. Uma associação entre o perfil do município e a abstenção não diz como uma pessoa vota (falácia ecológica).
@@ -229,6 +238,13 @@ gcloud auth application-default login
 
 # Consultas da validação da fonte (opcional, cerca de 19 MB processados)
 .\.venv\Scripts\python.exe -m src.validar_fonte
+
+# Página de storytelling (precisa de Node.js 20 ou mais novo)
+.\.venv\Scripts\python.exe -m src.exportar_web
+cd web
+npm install
+npm run dev        # desenvolvimento, em http://127.0.0.1:5173
+npm run build      # versão estática em web/dist/
 ```
 
 O pipeline roda, em ordem, extração, variáveis, testes, regressão e modelo, e para se algum teste falhar. `requirements.txt` lista as dependências diretas com versão fixa; `requirements-lock.txt` tem o ambiente completo.
@@ -244,8 +260,10 @@ src/
   modelo.py         baselines, árvores, validação cruzada e permutação (scikit-learn)
   pipeline.py       roda tudo em ordem
   validar_fonte.py  consultas da validação da fonte
+  exportar_web.py   dados e resultados de 2022 para a página em web/
 tests/test_dados.py testes de dados
 app/app.py          app Streamlit
+web/                página de storytelling (three.js, GSAP ScrollTrigger, Motion)
 data/brutos/        Parquet extraídos do BigQuery
 data/processados/   tabela final por município e ano
 resultados/         coeficientes, VIF, métricas, importâncias e previsões

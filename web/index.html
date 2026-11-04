@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>O que explica a abstenção</title>
+  <meta name="description" content="Os 5.570 municípios do Brasil no 1º turno de 2022: onde a abstenção foi maior, o que a acompanha e até onde os dados explicam.">
+  <meta name="theme-color" content="#0b0d12">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/estilo.css">
+</head>
+<body>
+  <canvas id="cena" aria-hidden="true"></canvas>
+  <div class="vinheta" aria-hidden="true"></div>
+  <div id="rotulos" aria-hidden="true"></div>
+  <div id="dica" aria-hidden="true"></div>
+
+  <header class="topo">
+    <a class="marca" href="#abertura">Abstenção <span>2022</span></a>
+    <div class="progresso" aria-hidden="true"><i></i></div>
+  </header>
+  <nav class="trilho" aria-label="Capítulos"></nav>
+
+  <div class="legendas" aria-hidden="true">
+    <div class="legenda" data-legenda="abst">
+      <span>Abstenção</span>
+      <i class="rampa"></i>
+      <small><b>10%</b><b>35% ou mais</b></small>
+    </div>
+    <div class="legenda" data-legenda="reg"></div>
+    <div class="legenda" data-legenda="resid">
+      <span>Abstenção real menos a prevista</span>
+      <i class="divergente"></i>
+      <small><b>abaixo do previsto</b><b>acima</b></small>
+    </div>
+  </div>
+
+  <main id="historia">
+    <section class="passo abertura" id="abertura" data-cena="abertura" data-titulo="Início">
+      <div class="cartao nu">
+        <p class="chapeu">Eleições 2022 · 1º turno · presidente</p>
+        <h1>Um em cada cinco eleitores não foi votar</h1>
+        <p class="numerao"><b data-v="nacional.abst_pct" data-f="pct2" data-contar>20,79%</b><span>de abstenção</span></p>
+        <p class="lide">Eram <b data-v="nacional.aptos" data-f="int"></b> eleitores aptos, e <b data-v="nacional.abstencoes" data-f="int"></b> não compareceram. Esta página percorre os <b data-v="nacional.municipios" data-f="int"></b> municípios do país para ver o que acompanha essa ausência e até onde os dados conseguem explicá-la.</p>
+        <p class="role" aria-hidden="true"><span></span>Role para começar</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="mapa" data-titulo="O mapa">
+      <div class="cartao">
+        <p class="num">01</p>
+        <h2>Cada ponto é um município</h2>
+        <p>São <b data-v="nacional.municipios" data-f="int"></b> pontos, cada um no centro do território do município. Por enquanto, todos têm a mesma cor.</p>
+        <p class="nota">Passe o mouse sobre um ponto para ver qual é.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="cor" data-titulo="A cor">
+      <div class="cartao">
+        <p class="num">02</p>
+        <h2>A falta não se espalha por igual</h2>
+        <p>Agora a cor é a taxa de abstenção: quanto mais claro o ponto, maior a parte do eleitorado que faltou.</p>
+        <p>A taxa foi de <b data-v="distribuicao.min.pct" data-f="pct2"></b> em <span data-v="distribuicao.min.nome"></span> (<span data-v="distribuicao.min.uf"></span>) a <b data-v="distribuicao.max.pct" data-f="pct2"></b> em <span data-v="distribuicao.max.nome"></span> (<span data-v="distribuicao.max.uf"></span>). Metade dos municípios ficou entre <b data-v="distribuicao.q1" data-f="pct2"></b> e <b data-v="distribuicao.q3" data-f="pct2"></b>.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="relevo" data-titulo="Os picos">
+      <div class="cartao">
+        <p class="num">03</p>
+        <h2>Vista de lado</h2>
+        <p>Com a altura marcando a mesma taxa, os picos aparecem.</p>
+        <p>Somando os eleitores de cada estado, as maiores abstenções foram em <span data-lista="ufs_maior"></span>. As menores, em <span data-lista="ufs_menor"></span>.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="armadilha" data-titulo="A armadilha">
+      <div class="cartao">
+        <p class="num">04</p>
+        <h2>Antes de qualquer conta, uma armadilha</h2>
+        <p>A tabela do TSE tem uma linha por zona eleitoral e por cargo em disputa, e repete o número de eleitores aptos em cada uma.</p>
+        <p class="numerao pequeno"><b data-v="armadilha.aptos_sem_filtro" data-f="int" data-contar></b><span>eleitores, somando a coluna sem filtro</span></p>
+        <p>É cerca de <b data-v="derivado.razao_armadilha" data-f="int"></b> vezes o eleitorado real. Cada eleitor estaria contado uma vez por cargo.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="filtro" data-titulo="O filtro">
+      <div class="cartao">
+        <p class="num">05</p>
+        <h2>Um filtro e um teste</h2>
+        <p>Fixando presidente, 1º turno e eleição ordinária, e tirando o voto no exterior, sobram <b data-v="armadilha.aptos_com_filtro" data-f="int"></b> eleitores aptos.</p>
+        <p>Antes de somar as zonas de cada município, um teste no código confere que nenhuma delas aparece duas vezes. Todo número desta página passou por esse filtro.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="regioes" data-titulo="Geografia">
+      <div class="cartao">
+        <p class="num">06</p>
+        <h2>A geografia pesa</h2>
+        <p>Cada coluna junta os municípios de uma região, do Norte ao Sul. A altura de cada ponto é a abstenção.</p>
+        <p>Na mediana, a maior foi no <span data-v="derivado.reg_max.regiao"></span> (<b data-v="derivado.reg_max.mediana" data-f="pct2"></b>) e a menor no <span data-v="derivado.reg_min.regiao"></span> (<b data-v="derivado.reg_min.mediana" data-f="pct2"></b>).</p>
+        <p>Só saber o estado de um município já explica <b data-v="regressao.r2_so_uf" data-f="fr"></b> da variação entre eles. Só a região, <b data-v="regressao.r2_so_regiao" data-f="fr"></b>.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="escolaridade" data-titulo="Escolaridade">
+      <div class="cartao">
+        <p class="num">07</p>
+        <h2>Escolaridade</h2>
+        <p>No eixo horizontal está a parte do eleitorado que é analfabeta ou só lê e escreve.</p>
+        <p>A regressão compara municípios com a mesma região, porte, idade do eleitorado, densidade e renda. Nessas condições, cada ponto percentual a mais nessa parte acompanha <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].coef" data-f="dec2"></b> ponto a mais de abstenção. Do 1º ao 3º quartil, a diferença estimada é de <b data-v="regressao.variaveis[termo=pct_baixa_escolaridade].q13" data-f="dec1"></b> pontos.</p>
+        <p class="nota">É associação, não causa. E o dado é do município, não do eleitor.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="tamanho" data-titulo="Tamanho">
+      <div class="cartao">
+        <p class="num">08</p>
+        <h2>Tamanho e densidade puxam para lados opostos</h2>
+        <p>Com o resto fixo, cada vez que o eleitorado dobra, a abstenção estimada sobe <b data-v="regressao.variaveis[termo=log2_aptos].coef" data-f="dec2"></b> ponto. Cada vez que a densidade de moradores dobra, ela cai <b data-v="regressao.variaveis[termo=log2_densidade].coef" data-f="abs2"></b>.</p>
+        <p>As duas variáveis andam juntas (correlação de <b data-v="correlacoes.log2_aptos__log2_densidade" data-f="dec2"></b>), e é a regressão que separa uma da outra. No gráfico, cada ponto está na posição do eleitorado, em escala logarítmica.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="idade" data-titulo="Idade">
+      <div class="cartao">
+        <p class="num">09</p>
+        <h2>Quem tem 70 anos ou mais</h2>
+        <p>A partir dos 70 anos o voto deixa de ser obrigatório. Cada ponto percentual a mais de eleitores nessa faixa acompanha <b data-v="regressao.variaveis[termo=pct_70_mais].coef" data-f="dec2"></b> ponto a mais de abstenção.</p>
+        <p>O valor-p é <b data-v="regressao.variaveis[termo=pct_70_mais].p" data-f="dec2"></b>. Passou no limite de 5%, mas é a associação mais fraca entre as que passaram.</p>
+      </div>
+    </section>
+
+    <section class="passo largo" data-cena="coeficientes" data-titulo="Tudo junto">
+      <div class="cartao largo">
+        <p class="num">10</p>
+        <h2>Tudo junto</h2>
+        <p>Cada linha mostra o efeito estimado de ir do 1º ao 3º quartil da variável, com o resto fixo, e o intervalo de 95% com erro agrupado por estado. Quando o intervalo cruza o zero, os dados não separam o efeito de nenhum.</p>
+        <figure class="grafico" id="g-coef" aria-label="Efeito de cada variável sobre a abstenção, do 1º ao 3º quartil, com intervalo de 95%"></figure>
+        <p class="nota">Região está comparada com o Sudeste. Efeitos em pontos percentuais de abstenção.</p>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="residuos" data-titulo="O que sobra">
+      <div class="cartao">
+        <p class="num">11</p>
+        <h2>O que fica sem explicação</h2>
+        <p>A regressão explica <b data-v="regressao.r2" data-f="fr"></b> da variação. A cor agora mostra o erro dela: em coral, municípios onde a abstenção ficou acima do previsto; em azul, abaixo.</p>
+        <p>Os erros se agrupam no mapa. Só o estado ainda explica <b data-v="regressao.r2_residuo_uf" data-f="fr"></b> deles, e por isso os testes usam erro agrupado por estado.</p>
+      </div>
+    </section>
+
+    <section class="passo largo" data-cena="modelos" data-titulo="Aprendizado de máquina">
+      <div class="cartao largo">
+        <p class="num">12</p>
+        <h2>E um modelo de aprendizado de máquina?</h2>
+        <p>Um random forest acerta mais quando treina e testa com municípios misturados: R² de <b data-v="modelos.kfold.random_forest.r2" data-f="dec2"></b>. Esse número engana, porque o modelo já viu os vizinhos de cada município.</p>
+        <p>Quando o estado inteiro fica fora do treino, o R² cai para <b data-v="modelos.groupkfold_uf.random_forest.r2" data-f="dec2"></b> e o erro médio sobe para <b data-v="modelos.groupkfold_uf.random_forest.mae" data-f="dec1"></b> pontos. Para prever um lugar que o modelo nunca viu, o número honesto é esse.</p>
+        <figure class="grafico" id="g-modelos" aria-label="R² de cada modelo com validação misturada e com o estado de fora"></figure>
+      </div>
+    </section>
+
+    <section class="passo" data-cena="limites" data-titulo="Limites">
+      <div class="cartao">
+        <p class="num">13</p>
+        <h2>O que dá para dizer</h2>
+        <ul class="limites">
+          <li>Tudo aqui é associação. Nenhum desses números mostra que uma coisa causa a outra.</li>
+          <li>O dado é do município, não do eleitor. Um município com mais idosos e mais abstenção não prova que foram os idosos que faltaram.</li>
+          <li>O erro agrupado usa <b data-v="nacional.ufs" data-f="int"></b> estados, pouco para esse método.</li>
+          <li>Mais da metade da variação continua sem explicação.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="passo" id="explorar" data-cena="explorar" data-titulo="Explorar">
+      <div class="cartao">
+        <p class="num">14</p>
+        <h2>Procure um município</h2>
+        <form class="busca" autocomplete="off">
+          <label for="busca-municipio">Nome do município</label>
+          <div class="campo">
+            <input id="busca-municipio" list="lista-municipios" placeholder="Ex.: Brasília" spellcheck="false">
+            <button type="button" class="limpar" aria-label="Limpar">×</button>
+          </div>
+          <datalist id="lista-municipios"></datalist>
+        </form>
+        <div class="ficha" hidden aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div>
+      <p><b>O que explica a abstenção</b>, por Deyvid Prado.</p>
+      <p>Dados do TSE e do IBGE publicados pela Base dos Dados e consultados no BigQuery. Análise em Python com statsmodels e scikit-learn. Página em three.js, GSAP ScrollTrigger e Motion.</p>
+      <p class="repo" hidden>Código: <a></a></p>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
