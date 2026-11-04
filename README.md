@@ -191,6 +191,26 @@ streamlit run app/app.py
 
 O app tem quatro abas: mapa dos municípios e tabela por UF, distribuição da abstenção, efeitos da regressão e importância do modelo, e busca de município, que mostra a abstenção observada, a prevista pelo gradient boosting treinado sem a UF daquele município e as variáveis comparadas à mediana nacional. O mapa usa os centroides do diretório da Base dos Dados.
 
+### Dependência espacial
+
+Os resíduos da regressão de municípios vizinhos se parecem (`src/espacial.py`, 8 vizinhos mais próximos pelo centroide, 999 permutações):
+
+| 2022 | Valor |
+|---|---|
+| I de Moran da abstenção | 0,636 |
+| I de Moran dos resíduos | 0,475 (p = 0,001; o maior I entre os sorteios foi 0,022) |
+| Com 5 e 10 vizinhos | 0,506 e 0,460 |
+| Variação dos resíduos explicada pela média dos vizinhos | 46,0% (pela UF: 18,6%) |
+| I dos resíduos depois de tirar a média da UF | 0,365 |
+| Correlação com a média dos vizinhos de outra UF (1.309 municípios) | 0,29 |
+
+O padrão atravessa as divisas, então há algo regional que as variáveis não medem. Duas checagens mostram que isso não muda as conclusões:
+
+- **Erro agrupado por grupos espaciais.** Grupos de municípios próximos formados pelas coordenadas, sem olhar a divisa: 27 e 60 grupos. Os valores-p ficam menores do que com a UF; por exemplo, 70 anos ou mais vai de 0,043 para 0,012 e 0,003. Nenhuma variável sem associação clara passa a ter. A região Norte chega a p = 0,015 com 60 grupos. O agrupamento por UF segue como o principal por ser o mais conservador.
+- **Validação cruzada com grupos espaciais.** Random forest com R² de 0,43 (27 grupos) e 0,45 (60 grupos), contra 0,33 no GroupKFold por UF. Deixar o estado inteiro de fora continua sendo a validação mais severa.
+
+Em 2018 o I dos resíduos foi 0,433.
+
 ## Página de storytelling
 
 `web/` tem uma versão narrada da análise, para ser lida rolando a página. Cada município é um ponto numa cena em three.js. Conforme a página desce, os pontos formam o mapa, ganham a cor da abstenção e se reorganizam em colunas por região e em gráficos de dispersão contra escolaridade, tamanho do eleitorado e idade. Depois a cor passa a mostrar o erro da regressão, e a página termina com uma busca por município.
@@ -205,7 +225,7 @@ O app tem quatro abas: mapa dos municípios e tabela por UF, distribuição da a
 - São dados agregados por município. Uma associação entre o perfil do município e a abstenção não diz como uma pessoa vota (falácia ecológica).
 - O modelo explica 43% da variação na regressão e 32% na previsão para estados não vistos. A maior parte da diferença entre municípios fica sem explicação com essas variáveis.
 - 27 UFs é pouco para o erro agrupado. Os p-valores perto de 0,05 devem ser lidos com cuidado.
-- O cluster por UF não trata a semelhança entre municípios vizinhos de estados diferentes.
+- Os resíduos têm dependência espacial que atravessa as divisas entre estados (I de Moran 0,475). O erro agrupado por grupos espaciais não muda as conclusões, mas o projeto não ajusta um modelo espacial.
 - O perfil do eleitorado é uma fotografia do cadastro e não coincide exatamente com os aptos da votação (razão entre 0,94 e 1,03 por município em 2022).
 - Os aptos de presidente ficam 201.153 acima dos de governador em 2022, sempre para cima e concentrados nas capitais. Não verifiquei a origem dessa diferença.
 - PIB em valores correntes. A população de 2018 vem de uma série diferente da de 2022, e a área é a do Censo 2022 nos dois anos.
@@ -247,7 +267,7 @@ npm run dev        # desenvolvimento, em http://127.0.0.1:5173
 npm run build      # versão estática em web/dist/
 ```
 
-O pipeline roda, em ordem, extração, variáveis, testes, regressão e modelo, e para se algum teste falhar. `requirements.txt` lista as dependências diretas com versão fixa; `requirements-lock.txt` tem o ambiente completo.
+O pipeline roda, em ordem, extração, variáveis, testes, regressão, modelo e dependência espacial, e para se algum teste falhar. `requirements.txt` lista as dependências diretas com versão fixa; `requirements-lock.txt` tem o ambiente completo.
 
 ## Estrutura
 
@@ -258,10 +278,11 @@ src/
   features.py       uma linha por município em data/processados/
   analise.py        regressão, VIF e resíduos (statsmodels)
   modelo.py         baselines, árvores, validação cruzada e permutação (scikit-learn)
+  espacial.py       I de Moran dos resíduos, erro agrupado e validação por grupos espaciais
   pipeline.py       roda tudo em ordem
   validar_fonte.py  consultas da validação da fonte
   exportar_web.py   dados e resultados de 2022 para a página em web/
-tests/test_dados.py testes de dados
+tests/              testes de dados e do I de Moran
 app/app.py          app Streamlit
 web/                página de storytelling (three.js, GSAP ScrollTrigger, Motion)
 data/brutos/        Parquet extraídos do BigQuery

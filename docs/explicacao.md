@@ -124,6 +124,23 @@ No GroupKFold por UF, cada estado inteiro fica só no treino ou só no teste. A 
 
 Numa entrevista, eu diria: "Quando os dados têm grupos, o KFold aleatório vaza informação do grupo para o teste. Eu rodei os dois e reporto os dois, mas o resultado que eu defendo é o por grupo: R² de 0,32. O KFold mede outra coisa."
 
+## Dependência espacial (I de Moran)
+
+O erro agrupado por UF supõe que os erros de municípios de estados diferentes são independentes. Mas a divisa entre estados é uma linha no mapa: um município no sertão de Pernambuco pode se parecer mais com o vizinho do lado paraibano do que com a capital do próprio estado. Medi isso em `src/espacial.py`.
+
+Para cada município, peguei os 8 mais próximos pelo centroide (a mediana da distância até eles é 27 km) e comparei o resíduo do município com a média dos resíduos desses vizinhos. O I de Moran resume essa comparação numa escala de -1 a 1: perto de zero, os vizinhos não têm nada a ver um com o outro; perto de 1, vizinhos erram para o mesmo lado. O valor-p vem de 999 sorteios em que os resíduos trocam de lugar entre os municípios ao acaso.
+
+Em 2022 o I dos resíduos foi 0,475, e o maior valor entre os 999 sorteios foi 0,022. Com 5 e com 10 vizinhos, deu 0,506 e 0,460, então o resultado não depende da escolha de 8. A média dos vizinhos explica 46,0% da variação dos resíduos, bem mais que os 18,6% da UF. Tirando de cada resíduo a média do seu estado, o I ainda fica em 0,365. E olhando só os vizinhos do outro lado da divisa (1.309 municípios têm pelo menos um), a correlação entre o resíduo e a média desses vizinhos é 0,29.
+
+Fiz duas checagens para ver se isso muda alguma conclusão.
+
+1. **Inferência.** Rodei a mesma regressão com o erro agrupado por grupos de municípios próximos, formados a partir das coordenadas e sem olhar a divisa (27 e 60 grupos). Os valores-p ficaram menores do que com a UF: 70 anos ou mais foi de 0,043 para 0,012 e 0,003. Com 60 grupos a região Norte passa a ter p = 0,015; com a UF tinha 0,087. As variáveis sem associação clara continuam sem. Mantive a UF como resultado principal porque é o agrupamento mais conservador.
+2. **Previsão.** Repeti a validação cruzada com os grupos espaciais no lugar da UF. O random forest teve R² de 0,43 com 27 grupos e 0,45 com 60, contra 0,33 deixando o estado inteiro de fora. A fronteira do estado pesa mais que a distância, e o GroupKFold por UF continua sendo a validação mais severa.
+
+O que fica: há um padrão regional que o modelo não mede, e ele atravessa as divisas. Não ajustei um modelo espacial (de erro ou de defasagem espacial). Ele mudaria a pergunta e seria difícil de interpretar com segurança.
+
+Numa entrevista, eu diria: "Testei se os erros de municípios vizinhos se parecem, e se parecem: I de Moran de 0,48, muito acima do que o acaso dá. Então conferi se isso derrubava alguma conclusão. O agrupamento por estado já era o mais conservador para os valores-p, e a validação deixando o estado de fora já era a mais dura para a previsão. O diagnóstico mostra o que falta no modelo, mas não muda o que eu afirmei."
+
 ## Métricas: MAE e R²
 
 O MAE é o erro absoluto médio, na mesma unidade do alvo: um MAE de 3,10 quer dizer que o modelo erra, em média, 3,1 pontos percentuais de abstenção. O R² compara o erro do modelo com o erro de prever a média; 0 é igual à média, 1 é acerto perfeito, e pode ser negativo quando o modelo erra mais que a média.

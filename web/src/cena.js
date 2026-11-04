@@ -31,13 +31,13 @@ const VERTICE = /* glsl */ `
 uniform float uW[6];
 uniform float uC[4];
 uniform vec3 uRegCor[5];
-uniform float uAltura, uTempo, uEscala, uTam, uTamAptos, uBrilho, uSel, uSelDim, uHaste;
+uniform float uAltura, uTempo, uEscala, uTam, uTamAptos, uBrilho, uSel, uSelDim, uHaste, uSuave;
 attribute vec3 aNuvem;
 attribute vec3 aReg;
 attribute vec3 aEsc;
 attribute vec3 aTam;
 attribute vec3 aIdade;
-attribute float aAbst, aResid, aRegiao, aPeso, aIdx;
+attribute float aAbst, aResid, aResidViz, aRegiao, aPeso, aIdx;
 #ifdef HASTE
 attribute float aTopo;
 #endif
@@ -62,7 +62,7 @@ void main() {
   vec3 cor = vec3(0.914, 0.886, 0.827) * uC[0]
            + rampa(aAbst) * uC[1]
            + uRegCor[int(aRegiao + 0.5)] * uC[2]
-           + divergente(aResid) * uC[3];
+           + divergente(mix(aResid, aResidViz, uSuave)) * uC[3];
   float a = uBrilho;
   if (uSel > -0.5 && !sel) a *= 1.0 - 0.75 * uSelDim;
 #ifdef HASTE
@@ -122,7 +122,7 @@ void main() {
   gl_FragColor = vec4(vCor, vA * smoothstep(0.5, 0.1, d) * 0.8);
 }`;
 
-export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotulosEl }) {
+export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotulosEl, picos }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setClearColor(FUNDO, 1);
   const cena = new THREE.Scene();
@@ -138,7 +138,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
   geo.setAttribute('aEsc', new THREE.BufferAttribute(L.esc, 3));
   geo.setAttribute('aTam', new THREE.BufferAttribute(L.tam, 3));
   geo.setAttribute('aIdade', new THREE.BufferAttribute(L.idade, 3));
-  for (const [nome, arr] of [['aAbst', L.abst], ['aResid', L.resid], ['aRegiao', L.regiao], ['aPeso', L.peso], ['aIdx', L.idx]]) {
+  for (const [nome, arr] of [['aAbst', L.abst], ['aResid', L.resid], ['aResidViz', L.residViz], ['aRegiao', L.regiao], ['aPeso', L.peso], ['aIdx', L.idx]]) {
     geo.setAttribute(nome, new THREE.BufferAttribute(arr, 1));
   }
 
@@ -155,6 +155,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     uSel: { value: -1 },
     uSelDim: { value: 0 },
     uHaste: { value: 0 },
+    uSuave: { value: 0 },
   };
   // As cores das regiões vêm em sRGB e o shader escreve sem conversão.
   uniforms.uRegCor.value.forEach((c) => c.convertLinearToSRGB());
@@ -180,7 +181,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     return new THREE.BufferAttribute(out, comp);
   };
   for (const nome of ['position', 'aNuvem', 'aReg', 'aEsc', 'aTam', 'aIdade']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 3));
-  for (const nome of ['aAbst', 'aResid', 'aRegiao', 'aPeso', 'aIdx']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 1));
+  for (const nome of ['aAbst', 'aResid', 'aResidViz', 'aRegiao', 'aPeso', 'aIdx']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 1));
   const topo = new Float32Array(n * 2);
   for (let i = 0; i < n; i++) topo[i * 2 + 1] = 1;
   geoH.setAttribute('aTopo', new THREE.BufferAttribute(topo, 1));
@@ -262,6 +263,19 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
   }
   rotulo('Eleitores aptos (escala logarítmica)', 0, -1.12, 'tam', 'titulo');
 
+  // Rótulos presos a um município: seguem o ponto (no topo da haste) em vez de um
+  // lugar fixo. Os três picos mais altos e o exemplo do capítulo "pico e estado".
+  const pct = (p) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(p) + '%';
+  const presos = [];
+  const prender = (p, grupo, classe) => {
+    rotulo(`${p.nome} (${p.uf}) ${pct(p.pct)}`, 0, 0, grupo, classe, 'centro', `${p.nome} ${pct(p.pct)}`);
+    presos.push({ r: rotulos.at(-1), idx: p.idx });
+  };
+  if (picos) {
+    for (const p of picos.maiores) prender(p, 'pico', 'nomeado');
+    prender(picos.exemplo, 'exemplo', 'nomeado exemplo');
+  }
+
   // ---------- tamanho e enquadramento ----------
   let W = 1, H = 1, desloc = 0, baseDist = 3.6, celular = false;
   const tanMeia = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
@@ -308,7 +322,16 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
   // ---------- rótulos ----------
   const v = new THREE.Vector3();
   function atualizarRotulos(S) {
-    const pesos = { y: S.eixoY, reg: S.wReg * S.eixoY, esc: S.wEsc * S.eixoY, tam: S.wTam * S.eixoY, idade: S.wIdade * S.eixoY };
+    const pesos = {
+      y: S.eixoY, reg: S.wReg * S.eixoY, esc: S.wEsc * S.eixoY, tam: S.wTam * S.eixoY, idade: S.wIdade * S.eixoY,
+      pico: S.picos * S.wMapa, exemplo: S.destaque * S.wMapa,
+    };
+    for (const p of presos) {
+      if ((pesos[p.r.grupo] || 0) < 0.02) continue;
+      posicaoAtual(p.idx, S, p.r.pos);
+      p.r.pos.z += 0.02;
+    }
+    const postos = [];
     for (const r of rotulos) {
       const o = pesos[r.grupo] || 0;
       if (o < 0.02) {
@@ -320,7 +343,21 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       const w = r.el.offsetWidth;
       if (r.ancora === 'direita') x -= w; else x -= w / 2;
       x = Math.min(Math.max(x, 6), W - w - 6);
-      r.el.style.transform = `translate(${x.toFixed(1)}px, ${(y - 6).toFixed(1)}px)`;
+      if (r.el.classList.contains('nomeado')) {
+        // Fica acima do ponto; se bater num rótulo já posto (os dois picos de Minas
+        // são vizinhos), sobe até sair de cima dele.
+        const h = r.el.offsetHeight;
+        // No computador, não passa por cima do trilho de capítulos à direita.
+        if (!celular) x = Math.min(x, W - w - 56);
+        y -= h + 10;
+        for (const o of postos) {
+          if (x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y) y = o.y - h - 4;
+        }
+        postos.push({ x, y, w, h });
+      } else {
+        y -= 6;
+      }
+      r.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
       r.el.style.opacity = o.toFixed(3);
       r.visivel = true;
     }
@@ -365,7 +402,8 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     u.uTamAptos.value = S.tamAptos;
     u.uBrilho.value = S.brilho;
     u.uTempo.value = tempo;
-    u.uSelDim.value = foco.v;
+    u.uSelDim.value = Math.max(foco.v, S.destaque);
+    u.uSuave.value = S.suave;
     uniF.uFantasma.value = S.fantasma;
     uniF.uEspalhar.value = S.espalhar;
     fantasma.visible = S.fantasma > 0.01;

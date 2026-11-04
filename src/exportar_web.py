@@ -32,6 +32,9 @@ def _municipios() -> pd.DataFrame:
     mun = mun.merge(res, on="id_municipio", how="left", validate="1:1")
     mun = mun.merge(prev[["id_municipio", "random_forest__groupkfold_uf"]],
                     on="id_municipio", how="left", validate="1:1")
+    esp = pd.read_parquet(RAIZ / "resultados" / f"residuos_espaciais_{ANO}.parquet")
+    mun = mun.merge(esp[["id_municipio", "residuo_vizinhos_pp"]], on="id_municipio",
+                    how="left", validate="1:1")
     assert len(mun) == mun["id_municipio"].nunique()
     return mun.sort_values("id_municipio").reset_index(drop=True)
 
@@ -53,6 +56,7 @@ def _arquivo_municipios(mun: pd.DataFrame) -> dict:
         "p70": [_r(v) for v in mun["pct_70_mais"]],
         "log2_aptos": [_r(v, 3) for v in mun["log2_aptos"]],
         "residuo": [_r(v) for v in mun["residuo_pp"]],
+        "residuo_vizinhos": [_r(v) for v in mun["residuo_vizinhos_pp"]],
         "previsto_rf": [_r(v) for v in mun["random_forest__groupkfold_uf"]],
     }
 
@@ -63,6 +67,55 @@ def _armadilha() -> dict:
     grupos = [g for g in val["grupos_cargo_tipo"] if g["ano"] == ANO and g["turno"] == 1]
     return {"aptos_sem_filtro": int(sum(g["aptos"] for g in grupos)),
             "cargos_tipos": len(grupos)}
+
+
+def _picos(mun: pd.DataFrame, por_uf: pd.DataFrame) -> dict:
+    """Os picos do mapa são municípios; a taxa de um estado soma todos os eleitores dele.
+
+    `exemplo` é o município com a maior abstenção entre os estados do terço com as
+    menores taxas totais: um pico alto num estado que, somado, ficou baixo. `idx` é a
+    posição do município em municipios.json.
+    """
+    a = mun["abstencao_pct"].astype(float)
+    picos = [{"idx": int(i), "nome": mun.at[i, "nome"], "uf": mun.at[i, "sigla_uf"], "pct": _r(a[i])}
+             for i in a.nlargest(3).index]
+    ordem = list(por_uf.index)  # do estado com menor taxa para o de maior
+    baixos = ordem[: len(ordem) // 3]
+    cand = a[mun["sigla_uf"].isin(baixos)]
+    i = cand.idxmax()
+    uf = mun.at[i, "sigla_uf"]
+    est = mun[mun["sigla_uf"] == uf]
+    grandes = est.nlargest(10, "aptos")
+    resto = est.drop(grandes.index)
+    pct = lambda d: 100 * d["abstencoes"].sum() / d["aptos"].sum()
+    return {
+        "maiores": picos,
+        "municipios_30_ou_mais": int((a >= 30).sum()),
+        "exemplo": {
+            "idx": int(i), "nome": mun.at[i, "nome"], "uf": uf, "pct": _r(a[i]),
+            "uf_pct": _r(por_uf.at[uf, "pct"]), "uf_posicao_menor": ordem.index(uf) + 1,
+            "uf_municipios": len(est),
+            "grandes_n": len(grandes), "grandes_parcela_eleitorado": _r(grandes["aptos"].sum() / est["aptos"].sum(), 3),
+            "grandes_pct": _r(pct(grandes)), "resto_n": len(resto), "resto_pct": _r(pct(resto)),
+        },
+    }
+
+
+def _espacial() -> dict:
+    e = json.loads((RAIZ / "resultados" / f"espacial_{ANO}.json").read_text(encoding="utf-8"))
+    vc = e["validacao_cruzada"]
+    return {
+        "k": e["k_vizinhos"], "distancia_mediana_km": _r(e["distancia_mediana_vizinho_km"], 0),
+        "moran_residuo": _r(e["moran_residuo"]["i"], 3), "p": e["moran_residuo"]["p_permutacao"],
+        "maior_sorteio": _r(e["moran_residuo"]["maior_i_entre_permutacoes"], 3),
+        "r2_vizinhos": _r(e["r2_residuo_explicado_pela_media_dos_vizinhos"], 3),
+        "moran_sem_uf": _r(e["moran_residuo_sem_media_da_uf"]["i"], 3),
+        "outra_uf_n": e["vizinhos_de_outra_uf"]["municipios_com_vizinho_de_outra_uf"],
+        "outra_uf_corr": _r(e["vizinhos_de_outra_uf"]["correlacao"], 2),
+        "rf_r2_uf": _r(vc["uf"]["random_forest"]["r2"], 3),
+        "rf_r2_clusters_27": _r(vc["clusters_27"]["random_forest"]["r2"], 3),
+        "rf_r2_clusters_60": _r(vc["clusters_60"]["random_forest"]["r2"], 3),
+    }
 
 
 def _resumo(mun: pd.DataFrame) -> dict:
@@ -113,6 +166,8 @@ def _resumo(mun: pd.DataFrame) -> dict:
             "max": {"pct": _r(a[i_max]), "nome": mun.at[i_max, "nome"], "uf": mun.at[i_max, "sigla_uf"]},
             "mediana": _r(a.median()), "q1": _r(q1), "q3": _r(q3),
         },
+        "picos": _picos(mun, por_uf),
+        "espacial": _espacial(),
         "ufs_maior": [{"uf": u, "pct": _r(p)} for u, p in por_uf["pct"].iloc[::-1].head(3).items()],
         "ufs_menor": [{"uf": u, "pct": _r(p)} for u, p in por_uf["pct"].head(3).items()],
         "regioes": [{"regiao": r, "pct": _r(por_reg.at[r, "pct"]), "mediana": _r(por_reg.at[r, "mediana"]),

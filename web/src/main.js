@@ -23,7 +23,10 @@ const BASE = {
   altura: 0, haste: 0, tam: 1, tamAptos: 0, brilho: 1,
   fantasma: 0, espalhar: 0,
   tilt: 0, yaw: 0, dist: 1, alvoX: 0, alvoY: 0,
-  eixoY: 0, legAbst: 0, legReg: 0, legResid: 0, interativo: 0,
+  eixoY: 0, legAbst: 0, legReg: 0, legResid: 0, legViz: 0, interativo: 0,
+  // picos: rótulos dos três maiores; destaque: acende o exemplo e apaga o resto;
+  // suave: troca o erro de cada município pela média do erro dos vizinhos.
+  picos: 0, destaque: 0, suave: 0,
 };
 const mapa = { wMapa: 1, interativo: 1 };
 const disp = { cReg: 1, eixoY: 1, legReg: 1, interativo: 1, tamAptos: 0.5 };
@@ -31,7 +34,8 @@ const ESTADOS = {
   abertura: { wNuvem: 1, cNeutro: 0.55, cAbst: 0.45, tam: 1.3, brilho: 0.7, dist: 1.08, alvoX: -0.32 },
   mapa: { ...mapa, cNeutro: 1 },
   cor: { ...mapa, cAbst: 1, legAbst: 1 },
-  relevo: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08 },
+  relevo: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, picos: 1 },
+  pico: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, destaque: 1 },
   armadilha: { wMapa: 1, cNeutro: 1, fantasma: 1, espalhar: 1, tilt: 1.02, yaw: 0.3, dist: 1.05, alvoY: 0.1 },
   filtro: { ...mapa, cAbst: 1, legAbst: 1, tilt: 0.35, dist: 1 },
   regioes: { ...disp, wReg: 1, tamAptos: 0 },
@@ -40,6 +44,7 @@ const ESTADOS = {
   idade: { ...disp, wIdade: 1 },
   coeficientes: { wMapa: 1, cAbst: 1, brilho: 0.16, dist: 1.1 },
   residuos: { ...mapa, cResid: 1, legResid: 1 },
+  vizinhos: { ...mapa, cResid: 1, legViz: 1, suave: 1 },
   modelos: { wMapa: 1, cResid: 1, brilho: 0.18, dist: 1.1 },
   limites: { wNuvem: 1, cNeutro: 0.6, cAbst: 0.4, brilho: 0.4, tam: 1.2, dist: 1.15 },
   explorar: { ...mapa, cAbst: 1, legAbst: 1 },
@@ -84,6 +89,7 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     legAbst: document.querySelector('[data-legenda="abst"]'),
     legReg,
     legResid: document.querySelector('[data-legenda="resid"]'),
+    legViz: document.querySelector('[data-legenda="viz"]'),
   };
 
   // ---------- dica do mouse ----------
@@ -99,6 +105,11 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   function conteudoDica(i) {
     const nome = `${municipios.nome[i]} (${municipios.uf[i]})`;
     const abst = municipios.abst[i];
+    if (S.cResid > 0.5 && S.suave > 0.5) {
+      const r = municipios.residuo[i], rv = municipios.residuo_vizinhos[i];
+      const sinal = (x) => `${x >= 0 ? '+' : '−'}${formatar(Math.abs(x), 'dec1')} p.p.`;
+      return `<b>${nome}</b><br>erro do município: ${sinal(r)}<br>erro médio dos vizinhos: <span class="valor">${sinal(rv)}</span>`;
+    }
     if (S.cResid > 0.5) {
       const prev = abst - municipios.residuo[i];
       const r = municipios.residuo[i];
@@ -136,6 +147,14 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     dica.style.transform = `translate(${dx}px, ${Math.max(8, y - h - 12)}px)`;
     dica.classList.add('visivel');
   }
+
+  // ---------- numeração ----------
+  // O número de cada capítulo sai da ordem no HTML: inserir um capítulo não exige
+  // renumerar os outros à mão.
+  passos.filter((p) => !p.classList.contains('abertura')).forEach((p, k) => {
+    const el = p.querySelector('.num');
+    if (el) el.textContent = String(k + 1).padStart(2, '0');
+  });
 
   // ---------- progresso e trilho ----------
   const barra = document.querySelector('.progresso i');
@@ -228,16 +247,17 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   lista.innerHTML = opcoes.join('');
   const entrada = document.getElementById('busca-municipio');
   const ficha = document.querySelector('.ficha');
+  let selBusca = -1;
+  const exemplo = resumo.picos.exemplo.idx;
   function escolher(i) {
+    selBusca = i;
     if (i < 0) {
-      cena.selecionar(-1);
       animate(foco, { v: 0 }, { duration: 0.8, ease: curva });
       ficha.hidden = true;
       return;
     }
     const [x, y] = cena.posMapa(i);
     foco.x = x; foco.y = y;
-    cena.selecionar(i);
     animate(foco, { v: 1 }, { duration: reduzido ? 0 : 1.2, ease: curva });
     const r = municipios.residuo[i];
     const prev = municipios.abst[i] - r;
@@ -283,6 +303,7 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     // pontos andam por baixo de um mouse parado.
     if (mouse) pendente = true;
     atualizarDica();
+    cena.selecionar(selBusca >= 0 ? selBusca : S.destaque > 0.02 ? exemplo : -1);
     cena.desenhar(S, foco, tempo);
   });
 
@@ -309,6 +330,7 @@ async function iniciar() {
       municipios,
       camadasArmadilha: resumo.derivado.razao_armadilha,
       rotulosEl: document.getElementById('rotulos'),
+      picos: resumo.picos,
     });
   } catch (erro) {
     console.error('WebGL indisponível; a história segue só com o texto.', erro);

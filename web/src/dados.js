@@ -70,6 +70,14 @@ export function preencherTextos(resumo) {
   for (const el of document.querySelectorAll('[data-lista]')) {
     el.textContent = listaUfs(resumo[el.dataset.lista]);
   }
+  for (const el of document.querySelectorAll('[data-lista-picos]')) {
+    const partes = resumo.picos[el.dataset.listaPicos].map((p) => `${p.nome} (${p.uf}), com ${F.pct2(p.pct)}`);
+    el.textContent = partes.slice(0, -1).join('; ') + ' e ' + partes.at(-1);
+  }
+  for (const el of document.querySelectorAll('[data-uf-nome]')) {
+    const uf = caminho(resumo, el.dataset.ufNome);
+    el.textContent = UF_NOMES[uf] || uf;
+  }
 }
 
 // Gerador pseudoaleatório com semente, para a nuvem e o espalhamento serem sempre iguais.
@@ -116,6 +124,7 @@ export function montarLayouts(m) {
     idade: new Float32Array(n * 3),
     abst: new Float32Array(n),
     resid: new Float32Array(n),
+    residViz: new Float32Array(n),
     regiao: new Float32Array(n),
     peso: new Float32Array(n),
     idx: new Float32Array(n),
@@ -149,6 +158,9 @@ export function montarLayouts(m) {
 
     L.abst[i] = limitar((m.abst[i] - COR_DOMINIO[0]) / (COR_DOMINIO[1] - COR_DOMINIO[0]));
     L.resid[i] = limitar(m.residuo[i] / RESID_LIMITE, -1, 1);
+    // A média dos vizinhos varia menos que o erro de cada município: escala de metade
+    // do tamanho, para as manchas aparecerem com a mesma força de cor.
+    L.residViz[i] = limitar(m.residuo_vizinhos[i] / (RESID_LIMITE / 2), -1, 1);
     L.regiao[i] = m.regiao[i];
     L.peso[i] = limitar((m.log2_aptos[i] - lmin) / (lmax - lmin));
     L.idx[i] = i;
