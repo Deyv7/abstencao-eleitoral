@@ -78,7 +78,12 @@ with aba_uf:
                                        "latitude": False, "longitude": False},
         color_continuous_scale="Viridis", labels={"abstencao_pct": "Abstenção (%)"})
     mapa.update_traces(marker={"size": 3})
-    mapa.update_geos(fitbounds="locations", showcountries=True, showland=True)
+    # resolution=50: na escala padrão (1:110 milhões) o litoral e as fronteiras são tão
+    # simplificados que municípios da costa e da fronteira pareciam cair no mar ou no país
+    # vizinho. As coordenadas estão certas; o contorno é que era grosseiro.
+    mapa.update_geos(fitbounds="locations", resolution=50, scope="south america",
+                     showcountries=True, showland=True, showocean=True,
+                     oceancolor="#dbe9f6", showcoastlines=True)
     mapa.update_layout(height=600, margin={"l": 0, "r": 0, "t": 0, "b": 0})
     st.plotly_chart(mapa, width="stretch")
 
