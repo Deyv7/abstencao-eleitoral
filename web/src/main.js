@@ -8,8 +8,8 @@ import { criarPainel } from './painel.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Endereço do repositório no GitHub. Vazio enquanto ele não for publicado.
-const REPO_URL = '';
+// Endereço do repositório no GitHub, mostrado no rodapé.
+const REPO_URL = 'https://github.com/Deyv7/abstencao-eleitoral';
 
 const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (reduzido) document.body.classList.add('sem-animacao');
