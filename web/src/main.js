@@ -4,6 +4,7 @@ import Lenis from 'lenis';
 import { animate, inView } from 'motion';
 import { carregar, preencherTextos, montarLayouts, formatar, CORES_REGIAO, UF_NOMES } from './dados.js';
 import { graficoCoeficientes, graficoModelos } from './graficos.js';
+import { criarPainel } from './painel.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,15 +28,17 @@ const BASE = {
   // picos: rótulos dos três maiores; destaque: acende o exemplo e apaga o resto;
   // suave: troca o erro de cada município pela média do erro dos vizinhos.
   picos: 0, destaque: 0, suave: 0,
+  // clicavel: clicar num município abre o painel do estado dele.
+  clicavel: 0,
 };
 const mapa = { wMapa: 1, interativo: 1 };
 const disp = { cReg: 1, eixoY: 1, legReg: 1, interativo: 1, tamAptos: 0.5 };
 const ESTADOS = {
   abertura: { wNuvem: 1, cNeutro: 0.55, cAbst: 0.45, tam: 1.3, brilho: 0.7, dist: 1.08, alvoX: -0.32 },
   mapa: { ...mapa, cNeutro: 1 },
-  cor: { ...mapa, cAbst: 1, legAbst: 1 },
-  relevo: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, picos: 1 },
-  pico: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, destaque: 1 },
+  cor: { ...mapa, cAbst: 1, legAbst: 1, clicavel: 1 },
+  relevo: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, picos: 1, clicavel: 1 },
+  pico: { ...mapa, cAbst: 1, legAbst: 1, altura: 0.34, haste: 1, tilt: 0.86, yaw: -0.3, dist: 0.98, alvoY: 0.08, destaque: 1, clicavel: 1 },
   armadilha: { wMapa: 1, cNeutro: 1, fantasma: 1, espalhar: 1, tilt: 1.02, yaw: 0.3, dist: 1.05, alvoY: 0.1 },
   filtro: { ...mapa, cAbst: 1, legAbst: 1, tilt: 0.35, dist: 1 },
   regioes: { ...disp, wReg: 1, tamAptos: 0 },
@@ -57,8 +60,10 @@ const suave = (t) => t * t * (3 - 2 * t);
 function iniciarHistoria({ cena, municipios, resumo }) {
   const passos = [...document.querySelectorAll('.passo')];
   const S = { ...ESTADOS[passos[0].dataset.cena] };
-  const foco = { v: 0, x: 0, y: 0 };
+  // foco: câmera (v, x, y, z = quanto aproxima) e destaque (selDim, uf, ufDim, painel).
+  const foco = { v: 0, x: 0, y: 0, z: 0.55, selDim: 0, uf: -1, ufDim: 0, painel: 0 };
   let marcos = [];
+  let passoAtual = 0;
 
   // Onde cada passo começa, em pixels de scroll. A transição para o estado do passo i
   // acontece enquanto o topo dele sobe de 85% a 35% da altura da tela.
@@ -71,14 +76,16 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   }
 
   function estadoEm(y) {
-    let de = marcos[0].estado, para = de, t = 0;
+    let de = marcos[0].estado, para = de, t = 0, k = 0;
     for (let i = 1; i < marcos.length; i++) {
       const m = marcos[i];
       if (y < m.ini) break;
       de = marcos[i - 1].estado;
       para = m.estado;
       t = y >= m.fim ? 1 : suave((y - m.ini) / (m.fim - m.ini));
+      k = i;
     }
+    passoAtual = t >= 0.5 ? k : Math.max(k - 1, 0);
     for (const k of CHAVES) S[k] = de[k] + (para[k] - de[k]) * t;
   }
 
@@ -119,7 +126,8 @@ function iniciarHistoria({ cena, municipios, resumo }) {
       : S.wIdade > 0.5 ? `70 anos ou mais: ${formatar(municipios.p70[i], 'pct1')}`
         : S.wTam > 0.5 || S.wReg > 0.5 ? `${formatar(municipios.aptos[i], 'int')} eleitores aptos`
           : `${formatar(municipios.aptos[i], 'int')} eleitores aptos`;
-    return `<b>${nome}</b><span class="valor">${formatar(abst, 'pct1')}</span> de abstenção<br>${extra}`;
+    const convite = S.clicavel > 0.5 && !painel.aberto() ? `<em class="clique">${toque ? 'toque' : 'clique'} para ver o estado</em>` : '';
+    return `<b>${nome}</b><span class="valor">${formatar(abst, 'pct1')}</span> de abstenção<br>${extra}${convite}`;
   }
 
   function atualizarDica() {
@@ -147,6 +155,48 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     dica.style.transform = `translate(${dx}px, ${Math.max(8, y - h - 12)}px)`;
     dica.classList.add('visivel');
   }
+
+  // ---------- painel do estado ----------
+  const toque = window.matchMedia('(hover: none)').matches;
+  const raizPainel = document.getElementById('painel-estado');
+  const painel = criarPainel({ raiz: raizPainel, municipios, resumo, reduzido });
+  const convite = document.querySelector('.convite');
+  convite.lastChild.textContent = `${toque ? 'Toque' : 'Clique'} num ponto para ver o estado`;
+  let estadoSel = -1, abertoEm = -1, tokenEstado = 0;
+  const curvaFoco = [0.22, 1, 0.36, 1];
+
+  function abrirEstado(i) {
+    const k = cena.ufLista.indexOf(municipios.uf[i]);
+    const largo = window.innerWidth >= 900;
+    const q = cena.enquadrarEstado(k, largo ? 360 + 66 : 0);
+    const jaAberto = painel.aberto();
+    tokenEstado++;
+    estadoSel = i;
+    abertoEm = passoAtual;
+    foco.uf = k;
+    foco.painel = largo ? 360 + 66 : 0;
+    if (!jaAberto && foco.v < 0.01) { foco.x = q.x; foco.y = q.y; foco.z = q.z; }
+    cena.marcar(i);
+    painel.abrir(i);
+    animate(foco, { x: q.x, y: q.y, z: q.z, v: 1, ufDim: 1 }, { duration: reduzido ? 0 : 1.5, ease: curvaFoco });
+    dica.classList.remove('visivel');
+    if (!jaAberto) raizPainel.querySelector('.fechar').focus({ preventScroll: true });
+  }
+  function fecharEstado() {
+    if (!painel.aberto()) return;
+    painel.fechar();
+    const token = ++tokenEstado;
+    animate(foco, { v: 0, ufDim: 0 }, { duration: reduzido ? 0 : 1, ease: curvaFoco })
+      .then(() => { if (token === tokenEstado) { estadoSel = -1; foco.uf = -1; } });
+  }
+  canvas.addEventListener('click', (e) => {
+    if (S.clicavel < 0.9) return;
+    const i = cena.maisProximo(e.clientX, e.clientY, S, toque ? 22 : 16);
+    if (i >= 0) abrirEstado(i);
+    else fecharEstado();
+  });
+  raizPainel.querySelector('.fechar').addEventListener('click', fecharEstado);
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharEstado(); });
 
   // ---------- numeração ----------
   // O número de cada capítulo sai da ordem no HTML: inserir um capítulo não exige
@@ -251,6 +301,7 @@ function iniciarHistoria({ cena, municipios, resumo }) {
   const exemplo = resumo.picos.exemplo.idx;
   function escolher(i) {
     selBusca = i;
+    foco.z = 0.55;
     if (i < 0) {
       animate(foco, { v: 0 }, { duration: 0.8, ease: curva });
       ficha.hidden = true;
@@ -302,8 +353,12 @@ function iniciarHistoria({ cena, municipios, resumo }) {
     // Recalcula a dica a cada quadro enquanto o mouse está na cena: com o scroll, os
     // pontos andam por baixo de um mouse parado.
     if (mouse) pendente = true;
+    // Sair do capítulo (ou dos mapas clicáveis) fecha o estado.
+    if (painel.aberto() && (S.clicavel < 0.5 || passoAtual !== abertoEm)) fecharEstado();
+    convite.style.opacity = (S.clicavel * (1 - foco.ufDim) * (S.clicavel > 0.98 ? 1 : 0)).toFixed(3);
     atualizarDica();
-    cena.selecionar(selBusca >= 0 ? selBusca : S.destaque > 0.02 ? exemplo : -1);
+    cena.selecionar(selBusca >= 0 ? selBusca : estadoSel >= 0 ? estadoSel : S.destaque > 0.02 ? exemplo : -1);
+    foco.selDim = selBusca >= 0 ? foco.v : S.destaque * (1 - foco.ufDim);
     cena.desenhar(S, foco, tempo);
   });
 

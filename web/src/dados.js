@@ -128,7 +128,11 @@ export function montarLayouts(m) {
     regiao: new Float32Array(n),
     peso: new Float32Array(n),
     idx: new Float32Array(n),
+    // Índice do estado de cada município, para a cena acender um estado só.
+    ufLista: [...new Set(m.uf)].sort(),
+    uf: new Float32Array(n),
   };
+  const ufIdx = new Map(L.ufLista.map((u, k) => [u, k]));
 
   // Mapa: equirretangular corrigida pela latitude média do país.
   const lon0 = -52.5, lat0 = -14.2, k = Math.cos((15 * Math.PI) / 180), div = 19;
@@ -164,6 +168,7 @@ export function montarLayouts(m) {
     L.regiao[i] = m.regiao[i];
     L.peso[i] = limitar((m.log2_aptos[i] - lmin) / (lmax - lmin));
     L.idx[i] = i;
+    L.uf[i] = ufIdx.get(m.uf[i]);
   }
 
   // Colunas por região em forma de violino: os municípios de cada faixa de 0,5 p.p.

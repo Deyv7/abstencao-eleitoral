@@ -291,3 +291,106 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
 @media (max-width: 899px) {
   .topo { background: linear-gradient(var(--fundo) 55%, transparent); padding-bottom: 26px; }
 }
+
+/* ---------- painel do estado (abre ao clicar num município) ---------- */
+.painel-estado {
+  position: fixed; z-index: 20;
+  right: calc(clamp(12px, 2.4vw, 32px) + 34px); top: 104px;
+  width: 360px; max-height: calc(100vh - 128px); overflow-y: auto; overscroll-behavior: contain;
+  padding: 20px 22px 18px;
+  background: linear-gradient(180deg, rgba(20, 23, 31, 0.86), rgba(12, 14, 19, 0.9));
+  border: 1px solid rgba(236, 230, 218, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  color: var(--tinta-2);
+  scrollbar-width: thin;
+}
+.painel-estado[hidden] { display: none; }
+.painel-estado .fechar {
+  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: rgba(236, 230, 218, 0.06); border: 1px solid var(--linha); color: var(--tinta-2);
+  cursor: pointer; transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.painel-estado .fechar:hover { background: rgba(236, 230, 218, 0.14); color: var(--tinta); transform: rotate(90deg); }
+.painel-estado .fechar:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.painel-estado .fechar svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; fill: none; }
+.painel-estado .sobre { margin: 0 0 4px; font: 500 11px/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--acento); }
+.painel-estado h3 { margin: 0; padding-right: 40px; font: 400 1.75rem/1.1 var(--serifa); color: var(--tinta); }
+.painel-estado .taxa { display: flex; align-items: baseline; gap: 12px; margin: 10px 0 14px; }
+.painel-estado .taxa strong { font: 500 2.4rem/1 var(--mono); color: var(--tinta); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.painel-estado .taxa span { font-size: 12.5px; line-height: 1.35; }
+.painel-estado .bloco { margin: 0 0 12px; }
+.painel-estado .rotulo { margin: 0 0 8px; font-size: 13px; }
+.painel-estado .rotulo b { color: var(--acento); font-weight: 600; }
+.painel-estado svg.ranking, .painel-estado svg.enxame { display: block; width: 100%; height: auto; overflow: visible; }
+.painel-estado .barra { fill: rgba(236, 230, 218, 0.16); transform-box: fill-box; transform-origin: 50% 100%; }
+.painel-estado .barra.ativa { fill: var(--acento); }
+.painel-estado .clicado {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline;
+  padding: 12px 14px; margin: 0 0 14px;
+  border-radius: 12px; background: rgba(236, 230, 218, 0.05); border: 1px solid var(--linha);
+}
+.painel-estado .clicado .nome { color: var(--tinta); font-weight: 600; font-size: 14px; }
+.painel-estado .clicado .valor { font: 500 18px/1.2 var(--mono); color: var(--tinta); text-align: right; }
+.painel-estado .clicado .dif { grid-column: 1 / -1; font: 500 12px/1.3 var(--mono); }
+.painel-estado .dif.acima { color: var(--coral); }
+.painel-estado .dif.abaixo { color: var(--azul); }
+.painel-estado figure { margin: 0 0 10px; }
+.painel-estado figcaption { margin-top: 6px; font-size: 11.5px; color: var(--apagado); }
+.enxame .grade { stroke: rgba(236, 230, 218, 0.06); }
+.enxame .tick { font: 500 9.5px var(--mono); fill: var(--apagado); text-anchor: middle; }
+.enxame .mun { opacity: 0.9; stroke: rgba(11, 13, 18, 0.55); stroke-width: 0.6; transform-box: fill-box; transform-origin: center; }
+.enxame .ref-br { stroke: rgba(236, 230, 218, 0.45); stroke-dasharray: 2 3; }
+.enxame .ref-uf { stroke: var(--acento); stroke-width: 1.5; }
+.enxame .ref-br-rot, .enxame .ref-uf-rot { font: 500 9.5px var(--mono); }
+.enxame .ref-br-rot { fill: var(--tinta-2); }
+.enxame .ref-uf-rot { fill: var(--acento); }
+.enxame .sel { fill: #fff; transform-box: fill-box; transform-origin: center; }
+.enxame .anel { fill: none; stroke: #fff; stroke-width: 1.2; opacity: 0.9; transform-box: fill-box; transform-origin: center; }
+.painel-estado .metades { margin: 0 0 12px; border-top: 1px solid var(--linha); }
+.painel-estado .metades > div { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--linha); }
+.painel-estado .metades i { justify-self: center; border-radius: 50%; background: var(--tinta-2); }
+.painel-estado .metades i.grande { width: 13px; height: 13px; }
+.painel-estado .metades i.pequeno { width: 5px; height: 5px; }
+.painel-estado .metades p { margin: 0; font-size: 13px; color: var(--tinta); }
+.painel-estado .metades small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--apagado); }
+.painel-estado .metades b { font: 500 17px/1 var(--mono); color: var(--tinta); }
+.painel-estado .leitura { margin: 0; font-size: 13px; line-height: 1.5; color: var(--tinta-2); }
+
+/* Convite para clicar, só nos mapas onde o clique abre o estado. */
+.convite {
+  position: fixed; z-index: 14; right: calc(clamp(12px, 2.4vw, 32px) + 34px); bottom: 28px; margin: 0;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 14px 8px 12px; border-radius: 999px;
+  background: rgba(14, 16, 22, 0.78); border: 1px solid var(--linha);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  font: 500 11.5px/1 var(--mono); letter-spacing: 0.03em; color: var(--tinta-2); white-space: nowrap;
+  pointer-events: none; opacity: 0;
+}
+.convite::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--acento);
+  box-shadow: 0 0 0 0 rgba(245, 176, 65, 0.6); animation: pulso 1.8s ease-out infinite;
+}
+@keyframes pulso { to { box-shadow: 0 0 0 9px rgba(245, 176, 65, 0); } }
+
+@media (max-width: 899px) {
+  .painel-estado {
+    left: 0; right: 0; top: auto; bottom: 0; width: auto;
+    max-height: 62vh; border-radius: 20px 20px 0 0; padding: 26px 18px 22px;
+    background: rgba(13, 15, 21, 0.97);
+    box-shadow: 0 -20px 60px -10px rgba(0, 0, 0, 0.8);
+  }
+  .painel-estado::before {
+    content: ""; position: absolute; top: 9px; left: 50%; width: 38px; height: 4px; margin-left: -19px;
+    border-radius: 2px; background: rgba(236, 230, 218, 0.2);
+  }
+  .painel-estado { max-height: 56vh; }
+  .convite { right: auto; left: 50%; transform: translateX(-50%); bottom: auto; top: 50vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .convite::before { animation: none; }
+}
+#dica em.clique { display: block; margin-top: 6px; font: 500 10.5px/1.2 var(--mono); font-style: normal; letter-spacing: 0.05em; text-transform: uppercase; color: var(--acento); }

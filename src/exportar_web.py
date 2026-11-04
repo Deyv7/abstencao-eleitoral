@@ -101,6 +101,34 @@ def _picos(mun: pd.DataFrame, por_uf: pd.DataFrame) -> dict:
     }
 
 
+def _ufs(mun: pd.DataFrame, por_uf: pd.DataFrame) -> dict:
+    """Dados de cada estado para o painel que abre ao clicar num município.
+
+    `metade` são os maiores municípios que, juntos, somam pelo menos metade do
+    eleitorado do estado; `resto` são os outros. É a conta que mostra por que um
+    município pequeno com abstenção alta quase não move a taxa do estado.
+    """
+    ordem = list(por_uf.index)  # do estado com menor taxa para o de maior
+    pct = lambda d: 100 * d["abstencoes"].sum() / d["aptos"].sum()
+    saida = {}
+    for uf in ordem:
+        est = mun[mun["sigla_uf"] == uf].sort_values("aptos", ascending=False)
+        acum = est["aptos"].cumsum() / est["aptos"].sum()
+        k = int((acum < 0.5).sum()) + 1
+        metade, resto = est.iloc[:k], est.iloc[k:]
+        saida[uf] = {
+            "regiao": est["regiao"].iloc[0],
+            "pct": _r(por_uf.at[uf, "pct"]),
+            "posicao_menor": ordem.index(uf) + 1,
+            "aptos": int(est["aptos"].sum()),
+            "municipios": len(est),
+            "metade": {"n": k, "pct": _r(pct(metade)), "parcela": _r(metade["aptos"].sum() / est["aptos"].sum(), 3),
+                       "nomes": metade["nome"].head(3).tolist()},
+            "resto": {"n": len(resto), "pct": _r(pct(resto)) if len(resto) else None},
+        }
+    return saida
+
+
 def _espacial() -> dict:
     e = json.loads((RAIZ / "resultados" / f"espacial_{ANO}.json").read_text(encoding="utf-8"))
     vc = e["validacao_cruzada"]
@@ -167,6 +195,7 @@ def _resumo(mun: pd.DataFrame) -> dict:
             "mediana": _r(a.median()), "q1": _r(q1), "q3": _r(q3),
         },
         "picos": _picos(mun, por_uf),
+        "ufs": _ufs(mun, por_uf),
         "espacial": _espacial(),
         "ufs_maior": [{"uf": u, "pct": _r(p)} for u, p in por_uf["pct"].iloc[::-1].head(3).items()],
         "ufs_menor": [{"uf": u, "pct": _r(p)} for u, p in por_uf["pct"].head(3).items()],

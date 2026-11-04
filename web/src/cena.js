@@ -31,13 +31,13 @@ const VERTICE = /* glsl */ `
 uniform float uW[6];
 uniform float uC[4];
 uniform vec3 uRegCor[5];
-uniform float uAltura, uTempo, uEscala, uTam, uTamAptos, uBrilho, uSel, uSelDim, uHaste, uSuave;
+uniform float uAltura, uTempo, uEscala, uTam, uTamAptos, uBrilho, uSel, uSelDim, uHaste, uSuave, uUf, uUfDim;
 attribute vec3 aNuvem;
 attribute vec3 aReg;
 attribute vec3 aEsc;
 attribute vec3 aTam;
 attribute vec3 aIdade;
-attribute float aAbst, aResid, aResidViz, aRegiao, aPeso, aIdx;
+attribute float aAbst, aResid, aResidViz, aRegiao, aPeso, aIdx, aUf;
 #ifdef HASTE
 attribute float aTopo;
 #endif
@@ -65,11 +65,16 @@ void main() {
            + divergente(mix(aResid, aResidViz, uSuave)) * uC[3];
   float a = uBrilho;
   if (uSel > -0.5 && !sel) a *= 1.0 - 0.75 * uSelDim;
+  // Estado aberto no painel: o resto do país fica como contorno apagado.
+  bool foraUf = uUf > -0.5 && abs(aUf - uUf) > 0.5;
+  if (foraUf) a *= 1.0 - 0.86 * uUfDim;
 #ifdef HASTE
+  if (!foraUf && uUf > -0.5) a *= 1.0 + 1.2 * uUfDim;
   vCor = cor;
   vAlpha = a * uHaste * (0.04 + 0.3 * aTopo);
 #else
   float s = uTam * mix(1.0, 0.55 + aPeso * 2.1, uTamAptos);
+  if (foraUf) s *= 1.0 - 0.3 * uUfDim;
   if (sel && uSel > -0.5) { s = max(s * 3.2, 6.5); cor = mix(cor, vec3(1.0), 0.55); a = 1.0; }
   gl_PointSize = s * uEscala / -mv.z;
   vCor = cor;
@@ -138,7 +143,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
   geo.setAttribute('aEsc', new THREE.BufferAttribute(L.esc, 3));
   geo.setAttribute('aTam', new THREE.BufferAttribute(L.tam, 3));
   geo.setAttribute('aIdade', new THREE.BufferAttribute(L.idade, 3));
-  for (const [nome, arr] of [['aAbst', L.abst], ['aResid', L.resid], ['aResidViz', L.residViz], ['aRegiao', L.regiao], ['aPeso', L.peso], ['aIdx', L.idx]]) {
+  for (const [nome, arr] of [['aAbst', L.abst], ['aResid', L.resid], ['aResidViz', L.residViz], ['aRegiao', L.regiao], ['aPeso', L.peso], ['aIdx', L.idx], ['aUf', L.uf]]) {
     geo.setAttribute(nome, new THREE.BufferAttribute(arr, 1));
   }
 
@@ -156,6 +161,8 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     uSelDim: { value: 0 },
     uHaste: { value: 0 },
     uSuave: { value: 0 },
+    uUf: { value: -1 },
+    uUfDim: { value: 0 },
   };
   // As cores das regiões vêm em sRGB e o shader escreve sem conversão.
   uniforms.uRegCor.value.forEach((c) => c.convertLinearToSRGB());
@@ -181,7 +188,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     return new THREE.BufferAttribute(out, comp);
   };
   for (const nome of ['position', 'aNuvem', 'aReg', 'aEsc', 'aTam', 'aIdade']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 3));
-  for (const nome of ['aAbst', 'aResid', 'aResidViz', 'aRegiao', 'aPeso', 'aIdx']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 1));
+  for (const nome of ['aAbst', 'aResid', 'aResidViz', 'aRegiao', 'aPeso', 'aIdx', 'aUf']) geoH.setAttribute(nome, dup(geo.getAttribute(nome).array, 1));
   const topo = new Float32Array(n * 2);
   for (let i = 0; i < n; i++) topo[i * 2 + 1] = 1;
   geoH.setAttribute('aTopo', new THREE.BufferAttribute(topo, 1));
@@ -275,9 +282,26 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     for (const p of picos.maiores) prender(p, 'pico', 'nomeado');
     prender(picos.exemplo, 'exemplo', 'nomeado exemplo');
   }
+  // O município clicado: o texto e o índice mudam a cada clique.
+  prender({ nome: '', uf: '', pct: 0, idx: 0 }, 'clicado', 'nomeado exemplo');
+  const clicado = presos.at(-1);
+  function marcar(i) {
+    clicado.idx = i;
+    clicado.r.texto = `${municipios.nome[i]} (${municipios.uf[i]}) ${pct(municipios.abst[i])}`;
+    clicado.r.curto = `${municipios.nome[i]} ${pct(municipios.abst[i])}`;
+    clicado.r.el.textContent = W < 600 ? clicado.r.curto : clicado.r.texto;
+  }
+
+  // Caixa de cada estado no mapa, para a câmera enquadrar o estado clicado.
+  const caixas = L.ufLista.map(() => [Infinity, Infinity, -Infinity, -Infinity]);
+  for (let i = 0; i < n; i++) {
+    const c = caixas[L.uf[i]], x = L.mapa[i * 3], y = L.mapa[i * 3 + 1];
+    c[0] = Math.min(c[0], x); c[1] = Math.min(c[1], y); c[2] = Math.max(c[2], x); c[3] = Math.max(c[3], y);
+  }
 
   // ---------- tamanho e enquadramento ----------
-  let W = 1, H = 1, desloc = 0, baseDist = 3.6, celular = false;
+  let escalaBase = 10;
+  let W = 1, H = 1, desloc = 0, baseDist = 3.6, celular = false, larguraUtilAtual = 1, offsetAtual = null;
   const tanMeia = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   function redimensionar(larguraCartoes) {
     W = window.innerWidth;
@@ -300,16 +324,19 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
       larguraUtil = W - desloc * 2;
       camera.setViewOffset(W, H, -desloc, 0, W, H);
     }
+    larguraUtilAtual = larguraUtil;
+    offsetAtual = null;
     camera.updateProjectionMatrix();
     const meiaAltura = 1.12, meiaLargura = 1.22;
     baseDist = Math.max(meiaAltura / tanMeia * (H / alturaUtil), meiaLargura / (tanMeia * (larguraUtil / H)));
-    uniforms.uEscala.value = (H * dpr) / 46;
+    escalaBase = (H * dpr) / 46;
+    uniforms.uEscala.value = escalaBase;
   }
 
   // ---------- câmera a partir do estado ----------
   const alvo = new THREE.Vector3();
   function posicionarCamera(S, foco) {
-    const d = baseDist * S.dist * (1 - 0.55 * foco.v);
+    const d = baseDist * S.dist * (1 - (foco.z ?? 0.55) * foco.v);
     alvo.set(S.alvoX + (foco.x - S.alvoX) * foco.v, S.alvoY + (foco.y - S.alvoY) * foco.v, 0);
     const st = Math.sin(S.tilt), ct = Math.cos(S.tilt);
     camera.position.set(alvo.x + Math.sin(S.yaw) * st * d, alvo.y - Math.cos(S.yaw) * st * d, ct * d);
@@ -321,10 +348,11 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
 
   // ---------- rótulos ----------
   const v = new THREE.Vector3();
-  function atualizarRotulos(S) {
+  function atualizarRotulos(S, foco) {
     const pesos = {
       y: S.eixoY, reg: S.wReg * S.eixoY, esc: S.wEsc * S.eixoY, tam: S.wTam * S.eixoY, idade: S.wIdade * S.eixoY,
-      pico: S.picos * S.wMapa, exemplo: S.destaque * S.wMapa,
+      pico: S.picos * S.wMapa * (1 - foco.ufDim), exemplo: S.destaque * S.wMapa * (1 - foco.ufDim),
+      clicado: foco.ufDim * S.wMapa,
     };
     for (const p of presos) {
       if ((pesos[p.r.grupo] || 0) < 0.02) continue;
@@ -348,7 +376,7 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
         // são vizinhos), sobe até sair de cima dele.
         const h = r.el.offsetHeight;
         // No computador, não passa por cima do trilho de capítulos à direita.
-        if (!celular) x = Math.min(x, W - w - 56);
+        if (!celular) x = Math.min(x, W - w - 56 - (foco.painel || 0) * foco.ufDim);
         y -= h + 10;
         for (const o of postos) {
           if (x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y) y = o.y - h - 4;
@@ -402,19 +430,45 @@ export function criarCena({ canvas, layouts, municipios, camadasArmadilha, rotul
     u.uTamAptos.value = S.tamAptos;
     u.uBrilho.value = S.brilho;
     u.uTempo.value = tempo;
-    u.uSelDim.value = Math.max(foco.v, S.destaque);
+    // Ao aproximar, a perspectiva incha os pontos; compensa a maior parte disso para
+    // um estado pequeno não virar um borrão.
+    const aprox = 1 - (foco.z ?? 0.55) * foco.v;
+    u.uEscala.value = escalaBase * (0.3 + 0.7 * aprox);
+    u.uSelDim.value = foco.selDim;
+    u.uUf.value = foco.uf;
+    u.uUfDim.value = foco.ufDim;
+    // Com o painel do estado aberto à direita, o conteúdo se centra no espaço entre
+    // os cartões e o painel.
+    if (!celular) {
+      const off = Math.round(-desloc + (foco.painel || 0) * 0.5 * foco.ufDim);
+      if (off !== offsetAtual) {
+        camera.setViewOffset(W, H, off, 0, W, H);
+        camera.updateProjectionMatrix();
+        offsetAtual = off;
+      }
+    }
     u.uSuave.value = S.suave;
     uniF.uFantasma.value = S.fantasma;
     uniF.uEspalhar.value = S.espalhar;
     fantasma.visible = S.fantasma > 0.01;
     hastes.visible = S.haste > 0.01;
     posicionarCamera(S, foco);
-    atualizarRotulos(S);
+    atualizarRotulos(S, foco);
     renderer.render(cena, camera);
   }
 
   function selecionar(i) { uniforms.uSel.value = i; }
   function posMapa(i) { return [L.mapa[i * 3], L.mapa[i * 3 + 1]]; }
 
-  return { redimensionar, desenhar, maisProximo, telaDe, selecionar, posMapa };
+  // Centro e aproximação da câmera para mostrar o estado inteiro. `painelPx` é a
+  // largura que o painel tira da área livre.
+  function enquadrarEstado(k, painelPx = 0) {
+    const [x0, y0, x1, y1] = caixas[k];
+    const livre = celular ? 1 : larguraUtilAtual / Math.max(larguraUtilAtual - painelPx, 200);
+    // No celular o painel sobe por baixo e sobra menos altura para o mapa.
+    const f = Math.max(((x1 - x0) / 2 / 1.22) * livre, (y1 - y0) / 2 / 1.12) * (celular ? 1.9 : 1.45);
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: 1 - Math.min(Math.max(f, 0.3), 0.95) };
+  }
+
+  return { redimensionar, desenhar, maisProximo, telaDe, selecionar, posMapa, enquadrarEstado, marcar, ufLista: L.ufLista };
 }
