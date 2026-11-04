@@ -8,6 +8,7 @@ Uso: python -m src.features [--anos 2022 2018]
 from __future__ import annotations
 
 import argparse
+import json
 
 import numpy as np
 import pandas as pd
@@ -32,6 +33,42 @@ VARIAVEIS = [
 ]
 REGIOES = ["Centro-Oeste", "Nordeste", "Norte", "Sudeste", "Sul"]
 ALVO = "abstencao_pct"
+
+
+# O centroide da Base dos Dados é o centro geométrico do território inteiro. Vitória
+# (ES) inclui as ilhas de Trindade e Martim Vaz, a ~1.100 km da costa, e o centro
+# das duas partes cai ~100 km mar adentro. Para esses municípios o ponto passa a ser
+# o centro da maior parte do território, calculado da malha do IBGE em data/brutos/
+# (API servicodados, qualidade intermediária, baixada em 04/11/2026).
+MALHAS_ILHAS_DISTANTES = {"3205309": "malha_vitoria_ibge.geojson"}
+
+
+def _centro_da_maior_parte(caminho) -> tuple[float, float]:
+    geo = json.loads(caminho.read_text(encoding="utf-8"))["features"][0]["geometry"]
+    poligonos = [geo["coordinates"]] if geo["type"] == "Polygon" else geo["coordinates"]
+
+    def area_centro(anel):
+        a = cx = cy = 0.0
+        for (x1, y1), (x2, y2) in zip(anel, anel[1:]):
+            c = x1 * y2 - x2 * y1
+            a += c
+            cx += (x1 + x2) * c
+            cy += (y1 + y2) * c
+        a /= 2
+        return abs(a), cx / (6 * a), cy / (6 * a)
+
+    _, lon, lat = max(area_centro(p[0]) for p in poligonos)
+    return lon, lat
+
+
+def corrigir_centroides(diretorio: pd.DataFrame) -> pd.DataFrame:
+    diretorio = diretorio.copy()
+    for id_mun, arquivo in MALHAS_ILHAS_DISTANTES.items():
+        lon, lat = _centro_da_maior_parte(BRUTOS / arquivo)
+        linha = diretorio["id_municipio"] == id_mun
+        assert linha.sum() == 1, id_mun
+        diretorio.loc[linha, ["longitude", "latitude"]] = [lon, lat]
+    return diretorio
 
 
 def agregar_votacao(zonas: pd.DataFrame) -> pd.DataFrame:
@@ -62,7 +99,7 @@ def montar(ano: int) -> pd.DataFrame:
     perfil = perfil[perfil["id_municipio"].notna()]  # linha sem município = exterior
     pib = pd.read_parquet(BRUTOS / f"pib_populacao_{ano}.parquet")
     censo = pd.read_parquet(BRUTOS / "censo_2022_municipio.parquet")
-    diretorio = pd.read_parquet(BRUTOS / "diretorio_municipios.parquet")
+    diretorio = corrigir_centroides(pd.read_parquet(BRUTOS / "diretorio_municipios.parquet"))
 
     df = (
         votos.merge(perfil, on="id_municipio", how="left", validate="1:1")

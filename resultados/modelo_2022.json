@@ -30,7 +30,7 @@
         "r2_empilhado": 0.5613603034226828,
         "mae_pp_media_partes": 2.4197199013154957,
         "r2_media_partes": 0.5608202151275098,
-        "r2_desvio_partes": 0.01864258722400345
+        "r2_desvio_partes": 0.018642587224003526
       }
     },
     "groupkfold_uf": {
@@ -59,8 +59,8 @@
         "mae_pp_empilhado": 3.063046189468727,
         "r2_empilhado": 0.3262888935086157,
         "mae_pp_media_partes": 3.060606783537337,
-        "r2_media_partes": 0.24389943750370024,
-        "r2_desvio_partes": 0.19294443976135625
+        "r2_media_partes": 0.24389943750370033,
+        "r2_desvio_partes": 0.19294443976135622
       }
     }
   }

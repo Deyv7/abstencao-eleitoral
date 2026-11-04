@@ -117,3 +117,43 @@ def test_agregacao_recusa_zona_repetida():
     repetida = pd.DataFrame([base, base])
     with pytest.raises(ValueError):
         agregar_votacao(repetida)
+
+
+# Fernando de Noronha (PE) fica a ~370 km da costa e não está na malha de UFs em
+# qualidade mínima, que só tem o continente e as ilhas próximas.
+FORA_DA_MALHA_ESPERADOS = {"2605459"}
+
+
+def test_ponto_de_cada_municipio_cai_no_proprio_estado(municipios):
+    # O ponto de cada município tem que estar dentro do contorno do seu estado, ou a
+    # menos de 10 km dele (a malha simplificada corta pontas de costa e de divisa).
+    # Pegou o centroide de Vitória (ES) 100 km no mar, puxado pela ilha de Trindade.
+    import json
+
+    from src.exportar_web import CODIGOS_UF
+
+    malha = json.loads((BRUTOS / "malha_uf_ibge.geojson").read_text(encoding="utf-8"))
+    aneis = {}
+    for f in malha["features"]:
+        geo = f["geometry"]
+        poligonos = [geo["coordinates"]] if geo["type"] == "Polygon" else geo["coordinates"]
+        aneis[CODIGOS_UF[f["properties"]["codarea"]]] = [np.array(p[0]) for p in poligonos]
+
+    def dentro(x, y, r):
+        xs, ys = r[:, 0], r[:, 1]
+        xj, yj = np.roll(xs, 1), np.roll(ys, 1)
+        cruza = ((ys > y) != (yj > y)) & (x < (xj - xs) * (y - ys) / (yj - ys + 1e-15) + xs)
+        return cruza.sum() % 2 == 1
+
+    def km_ate_contorno(x, y, rs):
+        return min(np.hypot((r[:, 0] - x) * np.cos(np.radians(y)), r[:, 1] - y).min() for r in rs) * 111
+
+    longe = {}
+    for m in municipios.itertuples():
+        rs = aneis[m.sigla_uf]
+        if any(dentro(m.longitude, m.latitude, r) for r in rs):
+            continue
+        d = km_ate_contorno(m.longitude, m.latitude, rs)
+        if d > 10:
+            longe[m.id_municipio] = (m.nome, round(d))
+    assert set(longe) == FORA_DA_MALHA_ESPERADOS, longe

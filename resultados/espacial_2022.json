@@ -1,0 +1,182 @@
+{
+  "ano": 2022,
+  "k_vizinhos": 8,
+  "permutacoes": 999,
+  "distancia_mediana_vizinho_km": 26.960874540199214,
+  "distancia_mediana_mais_proximo_km": 15.849333047323466,
+  "pct_vizinhos_mesma_uf": 92.32046678635547,
+  "moran_abstencao": {
+    "i": 0.6364979941560979,
+    "esperado_sem_dependencia": -0.0001795654516071108,
+    "p_permutacao": 0.001,
+    "z": 99.79453509782478,
+    "maior_i_entre_permutacoes": 0.02274816217850327
+  },
+  "moran_residuo": {
+    "i": 0.4750450535225574,
+    "esperado_sem_dependencia": -0.0001795654516071108,
+    "p_permutacao": 0.001,
+    "z": 74.00874890998833,
+    "maior_i_entre_permutacoes": 0.022605142767217958
+  },
+  "moran_residuo_sensibilidade_k": {
+    "5": 0.5060225688362904,
+    "10": 0.4603110222635621
+  },
+  "moran_residuo_sem_media_da_uf": {
+    "i": 0.3644833360260751,
+    "esperado_sem_dependencia": -0.0001795654516071108,
+    "p_permutacao": 0.001,
+    "z": 57.3473364812026,
+    "maior_i_entre_permutacoes": 0.01881419507503761
+  },
+  "r2_residuo_explicado_pela_media_dos_vizinhos": 0.46039856341830737,
+  "vizinhos_de_outra_uf": {
+    "municipios_com_vizinho_de_outra_uf": 1309,
+    "correlacao": 0.29081131435908425,
+    "correlacao_sem_media_da_uf": 0.21893889330610025
+  },
+  "distancia_media_vizinho_km": 35.932923598421404,
+  "erro_agrupado_espacial": {
+    "clusters_27": {
+      "C(regiao, Treatment(\"Sudeste\"))[T.Centro-Oeste]": {
+        "coef_pp": 0.11002769152714005,
+        "p": 0.9024166473473479
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Nordeste]": {
+        "coef_pp": -4.646650537721488,
+        "p": 0.0009868611304913553
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Norte]": {
+        "coef_pp": -2.4621862016279623,
+        "p": 0.0689979697926948
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Sul]": {
+        "coef_pp": -3.4113557915610127,
+        "p": 0.0003618955235227749
+      },
+      "pct_16_17": {
+        "coef_pp": -0.5572900532608643,
+        "p": 0.32666784943938687
+      },
+      "pct_70_mais": {
+        "coef_pp": 0.2568646399097302,
+        "p": 0.018433136111658588
+      },
+      "pct_feminino": {
+        "coef_pp": 0.16484441659641103,
+        "p": 0.34908231030414977
+      },
+      "pct_baixa_escolaridade": {
+        "coef_pp": 0.21678708579360964,
+        "p": 2.1999098285411896e-06
+      },
+      "pct_superior": {
+        "coef_pp": -0.06999419523649641,
+        "p": 0.3031435781334897
+      },
+      "log2_aptos": {
+        "coef_pp": 1.0990430442456243,
+        "p": 1.1386600133081831e-07
+      },
+      "log2_pib_per_capita": {
+        "coef_pp": -0.19806928551543362,
+        "p": 0.21727311203911676
+      },
+      "razao_aptos_populacao": {
+        "coef_pp": 0.7345590277534718,
+        "p": 0.547890527671201
+      },
+      "log2_densidade": {
+        "coef_pp": -0.6885370854436637,
+        "p": 2.2187215087621483e-05
+      }
+    },
+    "clusters_60": {
+      "C(regiao, Treatment(\"Sudeste\"))[T.Centro-Oeste]": {
+        "coef_pp": 0.11002769152714005,
+        "p": 0.8801110296508777
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Nordeste]": {
+        "coef_pp": -4.646650537721488,
+        "p": 2.005413282547053e-05
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Norte]": {
+        "coef_pp": -2.4621862016279623,
+        "p": 0.01686697786179998
+      },
+      "C(regiao, Treatment(\"Sudeste\"))[T.Sul]": {
+        "coef_pp": -3.4113557915610127,
+        "p": 3.816233085865898e-07
+      },
+      "pct_16_17": {
+        "coef_pp": -0.5572900532608643,
+        "p": 0.19138349422620243
+      },
+      "pct_70_mais": {
+        "coef_pp": 0.2568646399097302,
+        "p": 0.0037536221760571774
+      },
+      "pct_feminino": {
+        "coef_pp": 0.16484441659641103,
+        "p": 0.2339187124405539
+      },
+      "pct_baixa_escolaridade": {
+        "coef_pp": 0.21678708579360964,
+        "p": 6.046279958114685e-08
+      },
+      "pct_superior": {
+        "coef_pp": -0.06999419523649641,
+        "p": 0.2143130198821039
+      },
+      "log2_aptos": {
+        "coef_pp": 1.0990430442456243,
+        "p": 3.091620570344289e-12
+      },
+      "log2_pib_per_capita": {
+        "coef_pp": -0.19806928551543362,
+        "p": 0.17053577938636716
+      },
+      "razao_aptos_populacao": {
+        "coef_pp": 0.7345590277534718,
+        "p": 0.54880074729358
+      },
+      "log2_densidade": {
+        "coef_pp": -0.6885370854436637,
+        "p": 1.6203327342343253e-08
+      }
+    }
+  },
+  "validacao_cruzada": {
+    "uf": {
+      "regressao_linear": {
+        "r2": 0.260248670675577,
+        "mae_pp": 3.297229418246313
+      },
+      "random_forest": {
+        "r2": 0.3262888935086157,
+        "mae_pp": 3.063046189468727
+      }
+    },
+    "clusters_27": {
+      "regressao_linear": {
+        "r2": 0.35578038546287527,
+        "mae_pp": 3.0131644126024875
+      },
+      "random_forest": {
+        "r2": 0.4112343198800381,
+        "mae_pp": 2.805549999388368
+      }
+    },
+    "clusters_60": {
+      "regressao_linear": {
+        "r2": 0.37828819116314916,
+        "mae_pp": 2.935536023382109
+      },
+      "random_forest": {
+        "r2": 0.47616679237166193,
+        "mae_pp": 2.6309703239560815
+      }
+    }
+  }
+}

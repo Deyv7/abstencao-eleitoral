@@ -4,7 +4,7 @@ Autor: Deyvid Prado.
 
 Análise estatística e modelo de machine learning sobre a abstenção eleitoral nos municípios brasileiros: extração do BigQuery (Base dos Dados) para Parquet, testes de dados com pytest, regressão linear com statsmodels, modelos de árvores com scikit-learn e um app em Streamlit que roda sobre os arquivos locais.
 
-Versão 1, 04/11/2026: pipeline completo executado do zero, 21 testes de dados aprovados, app verificado.
+Versão 1, 04/11/2026: pipeline completo executado do zero, 27 testes aprovados (23 de dados e 4 do I de Moran), app verificado.
 
 ## Pergunta
 
@@ -53,7 +53,7 @@ flowchart LR
     E --> F
 ```
 
-Depois da extração nada mais consulta o BigQuery. O app lê só os Parquet e os arquivos de `resultados/`. Os arquivos são pequenos (1,8 MB em `data/brutos/`, 2,2 MB em `data/processados/` e 1,0 MB em `resultados/`), então estão versionados e o app roda sem credenciais do Google.
+Depois da extração nada mais consulta o BigQuery. O app lê só os Parquet e os arquivos de `resultados/`. Os arquivos são pequenos (1,7 MB em `data/brutos/`, 2,1 MB em `data/processados/` e 1,3 MB em `resultados/`), então estão versionados e o app roda sem credenciais do Google.
 
 ## Variáveis
 
@@ -86,7 +86,7 @@ Cada uma dessas escolhas está explicada em linguagem simples em [`docs/explicac
 
 ## Testes de dados
 
-`python -m pytest` roda 21 casos sobre os Parquet locais, sem BigQuery:
+`python -m pytest` roda 27 casos sobre os Parquet locais, sem BigQuery (23 de dados e 4 que conferem o cálculo do I de Moran em casos conhecidos):
 
 | Teste | Verifica |
 |---|---|
@@ -100,6 +100,7 @@ Cada uma dessas escolhas está explicada em linguagem simples em [`docs/explicac
 | Nulos | nenhuma variável usada tem nulo ou infinito |
 | Categorias do perfil | instrução e gênero somam o total de eleitores |
 | Perfil e votação | eleitores do perfil entre 90% e 110% dos aptos |
+| Ponto no estado | o ponto de cada município cai no contorno do seu estado (IBGE), a menos de 10 km; exceção documentada: Fernando de Noronha |
 | Agregação | a soma para quando recebe uma zona repetida (dado sintético) |
 
 Os testes por ano rodam para 2022 e 2018.
@@ -191,12 +192,44 @@ streamlit run app/app.py
 
 O app tem quatro abas: mapa dos municípios e tabela por UF, distribuição da abstenção, efeitos da regressão e importância do modelo, e busca de município, que mostra a abstenção observada, a prevista pelo gradient boosting treinado sem a UF daquele município e as variáveis comparadas à mediana nacional. O mapa usa os centroides do diretório da Base dos Dados.
 
+### Dependência espacial
+
+Os resíduos da regressão de municípios vizinhos se parecem (`src/espacial.py`, 8 vizinhos mais próximos pelo centroide, 999 permutações):
+
+| 2022 | Valor |
+|---|---|
+| I de Moran da abstenção | 0,636 |
+| I de Moran dos resíduos | 0,475 (p = 0,001; o maior I entre os sorteios foi 0,022) |
+| Com 5 e 10 vizinhos | 0,506 e 0,460 |
+| Variação dos resíduos explicada pela média dos vizinhos | 46,0% (pela UF: 18,6%) |
+| I dos resíduos depois de tirar a média da UF | 0,365 |
+| Correlação com a média dos vizinhos de outra UF (1.309 municípios) | 0,29 (0,22 tirando a média de cada UF) |
+| Distância até os 8 vizinhos | mediana de 27 km, média de 36 km |
+
+O padrão atravessa as divisas, então há algo regional que as variáveis não medem. Duas checagens mostram que nenhuma associação do resultado principal desaparece:
+
+- **Erro agrupado por grupos espaciais.** Grupos de municípios próximos formados pelas coordenadas, sem olhar a divisa: 27 e 60 grupos. Os valores-p usam t com G − 1 graus de liberdade, como na regressão principal, e ficam menores do que com a UF; por exemplo, 70 anos ou mais vai de 0,043 para 0,018 (27 grupos) e 0,0038 (60 grupos). As variáveis sem associação clara continuam sem. A exceção é a região Norte: de 0,087 com a UF para 0,069 com 27 grupos e 0,017 com 60. O agrupamento por UF segue como o principal por ser o mais conservador.
+- **Validação cruzada com grupos espaciais.** Random forest com R² de 0,41 (27 grupos) e 0,48 (60 grupos), contra 0,33 no GroupKFold por UF. Deixar o estado inteiro de fora continua sendo a validação mais severa.
+
+Em 2018 o I dos resíduos foi 0,433.
+
+## Página de storytelling
+
+`web/` tem uma versão narrada da análise, para ser lida rolando a página. Cada município é um ponto numa cena em three.js. Conforme a página desce, os pontos formam o mapa, ganham a cor da abstenção e se reorganizam em colunas por região e em gráficos de dispersão contra escolaridade, tamanho do eleitorado e idade. Depois a cor passa a mostrar o erro da regressão, e a página termina com uma busca por município.
+
+- A rolagem é lida pelo GSAP ScrollTrigger, com Lenis para suavizar. A transição entre dois estados da cena é calculada a partir da posição do scroll, então subir e descer a página dá sempre o mesmo resultado.
+- A entrada dos cartões, os contadores e os gráficos de coeficientes e de modelos são animados com Motion.
+- As divisas dos estados desenhadas sob os pontos vêm da malha de UFs do IBGE em qualidade mínima (API `servicodados.ibge.gov.br/api/v3/malhas`, baixada em 04/11/2026 para `data/brutos/malha_uf_ibge.geojson`). O exportador grava cada aresta uma vez em `web/public/dados/contorno.json`. Fernando de Noronha não aparece nessa malha e tem um rótulo próprio, porque o ponto fica a 370 km da costa.
+- O ponto de cada município é o centroide do território (Base dos Dados), com uma correção: o território de Vitória (ES) inclui as ilhas de Trindade e Martim Vaz, e o centroide caía 100 km no mar. `src/features.py` usa o centro da maior parte do território, calculado da malha do município no IBGE (`data/brutos/malha_vitoria_ibge.geojson`). Um teste confere que o ponto de cada município cai dentro do contorno do seu estado.
+- Nenhum número que vem dos dados é escrito à mão no HTML; o HTML só fixa limiares e escalas (30%, 5%, a legenda de 10% a 35%). `src/exportar_web.py` lê `data/processados/` e `resultados/` e grava `web/public/dados/`, e a página preenche os textos a partir desses arquivos. O exportador confere que a soma sem filtro é 778.687.320 e a com filtro é 155.758.656.
+- Com `prefers-reduced-motion`, a página não faz animações automáticas nem rolagem suavizada. Sem WebGL, o texto continua legível.
+
 ## Limitações
 
 - São dados agregados por município. Uma associação entre o perfil do município e a abstenção não diz como uma pessoa vota (falácia ecológica).
-- O modelo explica 43% da variação na regressão e 32% na previsão para estados não vistos. A maior parte da diferença entre municípios fica sem explicação com essas variáveis.
+- O modelo explica 43% da variação na regressão, e o melhor modelo de previsão (random forest) chega a 33% para estados não vistos. A maior parte da diferença entre municípios fica sem explicação com essas variáveis.
 - 27 UFs é pouco para o erro agrupado. Os p-valores perto de 0,05 devem ser lidos com cuidado.
-- O cluster por UF não trata a semelhança entre municípios vizinhos de estados diferentes.
+- Os resíduos têm dependência espacial que atravessa as divisas entre estados (I de Moran 0,475). Com o erro agrupado por grupos espaciais, nenhuma associação do resultado principal desaparece (e a região Norte passa a ter p < 0,05 com 60 grupos), mas o projeto não ajusta um modelo espacial.
 - O perfil do eleitorado é uma fotografia do cadastro e não coincide exatamente com os aptos da votação (razão entre 0,94 e 1,03 por município em 2022).
 - Os aptos de presidente ficam 201.153 acima dos de governador em 2022, sempre para cima e concentrados nas capitais. Não verifiquei a origem dessa diferença.
 - PIB em valores correntes. A população de 2018 vem de uma série diferente da de 2022, e a área é a do Censo 2022 nos dois anos.
@@ -229,9 +262,16 @@ gcloud auth application-default login
 
 # Consultas da validação da fonte (opcional, cerca de 19 MB processados)
 .\.venv\Scripts\python.exe -m src.validar_fonte
+
+# Página de storytelling (precisa de Node.js 20 ou mais novo)
+.\.venv\Scripts\python.exe -m src.exportar_web
+cd web
+npm install
+npm run dev        # desenvolvimento, em http://127.0.0.1:5173
+npm run build      # versão estática em web/dist/
 ```
 
-O pipeline roda, em ordem, extração, variáveis, testes, regressão e modelo, e para se algum teste falhar. `requirements.txt` lista as dependências diretas com versão fixa; `requirements-lock.txt` tem o ambiente completo.
+O pipeline roda, em ordem, extração, variáveis, testes, regressão, modelo e dependência espacial, e para se algum teste falhar. `requirements.txt` lista as dependências diretas com versão fixa; `requirements-lock.txt` tem o ambiente completo.
 
 ## Estrutura
 
@@ -242,10 +282,13 @@ src/
   features.py       uma linha por município em data/processados/
   analise.py        regressão, VIF e resíduos (statsmodels)
   modelo.py         baselines, árvores, validação cruzada e permutação (scikit-learn)
+  espacial.py       I de Moran dos resíduos, erro agrupado e validação por grupos espaciais
   pipeline.py       roda tudo em ordem
   validar_fonte.py  consultas da validação da fonte
-tests/test_dados.py testes de dados
+  exportar_web.py   dados e resultados de 2022 para a página em web/
+tests/              testes de dados e do I de Moran
 app/app.py          app Streamlit
+web/                página de storytelling (three.js, GSAP ScrollTrigger, Motion)
 data/brutos/        Parquet extraídos do BigQuery
 data/processados/   tabela final por município e ano
 resultados/         coeficientes, VIF, métricas, importâncias e previsões

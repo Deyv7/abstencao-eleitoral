@@ -1,4 +1,5 @@
-"""Roda o projeto inteiro em ordem: extração, variáveis, testes, análise, modelo.
+"""Roda o projeto inteiro em ordem: extração, variáveis, testes, análise, modelo e
+dependência espacial.
 
 Uso:
   python -m src.pipeline                 # do zero, consultando o BigQuery
@@ -11,7 +12,7 @@ import json
 import subprocess
 import sys
 
-from src import analise, features, modelo
+from src import analise, espacial, features, modelo
 from src.bq import REGISTRO
 
 
@@ -28,20 +29,23 @@ def main() -> None:
 
     if not args.sem_extracao:
         from src import extracao  # importa o cliente do BigQuery só se for usar
-        print("== 1/5 extração (BigQuery) ==")
+        print("== 1/6 extração (BigQuery) ==")
         extracao.extrair(args.anos)
-    print("== 2/5 variáveis por município ==")
+    print("== 2/6 variáveis por município ==")
     features.gerar(args.anos)
-    print("== 3/5 testes de dados ==")
+    print("== 3/6 testes de dados ==")
     codigo = subprocess.call([sys.executable, "-m", "pytest", "-q"])
     if codigo != 0:
         sys.exit("testes de dados falharam; análise interrompida")
-    print("== 4/5 regressão (statsmodels) ==")
+    print("== 4/6 regressão (statsmodels) ==")
     for ano in args.anos:
         analise.analisar(ano)
-    print("== 5/5 modelo (scikit-learn) ==")
+    print("== 5/6 modelo (scikit-learn) ==")
     for ano in args.anos:
         modelo.rodar(ano)
+    print("== 6/6 dependência espacial ==")
+    for ano in args.anos:
+        espacial.analisar(ano)
 
     if not args.sem_extracao:
         novas = REGISTRO.read_text(encoding="utf-8").splitlines()[linhas_antes:]
