@@ -26,11 +26,11 @@
         "r2_desvio_partes": 0.012492349884450206
       },
       "random_forest": {
-        "mae_pp_empilhado": 2.671466689786594,
+        "mae_pp_empilhado": 2.6714666897865946,
         "r2_empilhado": 0.6828467408414951,
         "mae_pp_media_partes": 2.6714666897865946,
         "r2_media_partes": 0.6822724206595563,
-        "r2_desvio_partes": 0.013276800694921194
+        "r2_desvio_partes": 0.01327680069492119
       }
     },
     "groupkfold_uf": {
@@ -57,7 +57,7 @@
       },
       "random_forest": {
         "mae_pp_empilhado": 3.3161048881572013,
-        "r2_empilhado": 0.5244682791400725,
+        "r2_empilhado": 0.5244682791400727,
         "mae_pp_media_partes": 3.327813260379243,
         "r2_media_partes": 0.48280697057672883,
         "r2_desvio_partes": 0.07316038510946687

@@ -4,7 +4,7 @@ Autor: Deyvid Prado.
 
 Análise estatística e modelo de machine learning sobre a abstenção eleitoral nos municípios brasileiros: extração do BigQuery (Base dos Dados) para Parquet, testes de dados com pytest, regressão linear com statsmodels, modelos de árvores com scikit-learn e um app em Streamlit que roda sobre os arquivos locais.
 
-Versão 1, 04/11/2026: pipeline completo executado do zero, 25 testes aprovados (21 de dados e 4 do I de Moran), app verificado.
+Versão 1, 04/11/2026: pipeline completo executado do zero, 27 testes aprovados (23 de dados e 4 do I de Moran), app verificado.
 
 ## Pergunta
 
@@ -86,7 +86,7 @@ Cada uma dessas escolhas está explicada em linguagem simples em [`docs/explicac
 
 ## Testes de dados
 
-`python -m pytest` roda 25 casos sobre os Parquet locais, sem BigQuery (21 de dados e 4 que conferem o cálculo do I de Moran em casos conhecidos):
+`python -m pytest` roda 27 casos sobre os Parquet locais, sem BigQuery (23 de dados e 4 que conferem o cálculo do I de Moran em casos conhecidos):
 
 | Teste | Verifica |
 |---|---|
@@ -100,6 +100,7 @@ Cada uma dessas escolhas está explicada em linguagem simples em [`docs/explicac
 | Nulos | nenhuma variável usada tem nulo ou infinito |
 | Categorias do perfil | instrução e gênero somam o total de eleitores |
 | Perfil e votação | eleitores do perfil entre 90% e 110% dos aptos |
+| Ponto no estado | o ponto de cada município cai no contorno do seu estado (IBGE), a menos de 10 km; exceção documentada: Fernando de Noronha |
 | Agregação | a soma para quando recebe uma zona repetida (dado sintético) |
 
 Os testes por ano rodam para 2022 e 2018.
@@ -207,8 +208,8 @@ Os resíduos da regressão de municípios vizinhos se parecem (`src/espacial.py`
 
 O padrão atravessa as divisas, então há algo regional que as variáveis não medem. Duas checagens mostram que nenhuma associação do resultado principal desaparece:
 
-- **Erro agrupado por grupos espaciais.** Grupos de municípios próximos formados pelas coordenadas, sem olhar a divisa: 27 e 60 grupos. Os valores-p usam t com G − 1 graus de liberdade, como na regressão principal, e ficam menores do que com a UF; por exemplo, 70 anos ou mais vai de 0,043 para 0,018 (27 grupos) e 0,0045 (60 grupos). As variáveis sem associação clara continuam sem. A exceção é a região Norte: de 0,087 com a UF para 0,071 com 27 grupos e 0,018 com 60. O agrupamento por UF segue como o principal por ser o mais conservador.
-- **Validação cruzada com grupos espaciais.** Random forest com R² de 0,43 (27 grupos) e 0,45 (60 grupos), contra 0,33 no GroupKFold por UF. Deixar o estado inteiro de fora continua sendo a validação mais severa.
+- **Erro agrupado por grupos espaciais.** Grupos de municípios próximos formados pelas coordenadas, sem olhar a divisa: 27 e 60 grupos. Os valores-p usam t com G − 1 graus de liberdade, como na regressão principal, e ficam menores do que com a UF; por exemplo, 70 anos ou mais vai de 0,043 para 0,018 (27 grupos) e 0,0038 (60 grupos). As variáveis sem associação clara continuam sem. A exceção é a região Norte: de 0,087 com a UF para 0,069 com 27 grupos e 0,017 com 60. O agrupamento por UF segue como o principal por ser o mais conservador.
+- **Validação cruzada com grupos espaciais.** Random forest com R² de 0,41 (27 grupos) e 0,48 (60 grupos), contra 0,33 no GroupKFold por UF. Deixar o estado inteiro de fora continua sendo a validação mais severa.
 
 Em 2018 o I dos resíduos foi 0,433.
 
@@ -219,6 +220,7 @@ Em 2018 o I dos resíduos foi 0,433.
 - A rolagem é lida pelo GSAP ScrollTrigger, com Lenis para suavizar. A transição entre dois estados da cena é calculada a partir da posição do scroll, então subir e descer a página dá sempre o mesmo resultado.
 - A entrada dos cartões, os contadores e os gráficos de coeficientes e de modelos são animados com Motion.
 - As divisas dos estados desenhadas sob os pontos vêm da malha de UFs do IBGE em qualidade mínima (API `servicodados.ibge.gov.br/api/v3/malhas`, baixada em 04/11/2026 para `data/brutos/malha_uf_ibge.geojson`). O exportador grava cada aresta uma vez em `web/public/dados/contorno.json`. Fernando de Noronha não aparece nessa malha e tem um rótulo próprio, porque o ponto fica a 370 km da costa.
+- O ponto de cada município é o centroide do território (Base dos Dados), com uma correção: o território de Vitória (ES) inclui as ilhas de Trindade e Martim Vaz, e o centroide caía 100 km no mar. `src/features.py` usa o centro da maior parte do território, calculado da malha do município no IBGE (`data/brutos/malha_vitoria_ibge.geojson`). Um teste confere que o ponto de cada município cai dentro do contorno do seu estado.
 - Nenhum número que vem dos dados é escrito à mão no HTML; o HTML só fixa limiares e escalas (30%, 5%, a legenda de 10% a 35%). `src/exportar_web.py` lê `data/processados/` e `resultados/` e grava `web/public/dados/`, e a página preenche os textos a partir desses arquivos. O exportador confere que a soma sem filtro é 778.687.320 e a com filtro é 155.758.656.
 - Com `prefers-reduced-motion`, a página não faz animações automáticas nem rolagem suavizada. Sem WebGL, o texto continua legível.
 

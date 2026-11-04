@@ -26,7 +26,7 @@ Numa entrevista, eu diria: "Eu modelo a taxa e não o número absoluto de absten
 
 ## Testes de dados
 
-Os testes estão em `tests/test_dados.py` e rodam sobre os Parquet locais, sem BigQuery. São 21 casos (os testes por ano rodam para 2022 e 2018). Mais 4 em `tests/test_espacial.py` conferem o I de Moran em casos de resposta conhecida.
+Os testes estão em `tests/test_dados.py` e rodam sobre os Parquet locais, sem BigQuery. São 23 casos (os testes por ano rodam para 2022 e 2018). Mais 4 em `tests/test_espacial.py` conferem o I de Moran em casos de resposta conhecida.
 
 Filtro da extração: confere que só há presidente, 1º turno, eleição ordinária e nenhuma linha do exterior. Se alguém mexer na consulta e esquecer um filtro, o teste falha antes da análise.
 
@@ -128,14 +128,14 @@ Numa entrevista, eu diria: "Quando os dados têm grupos, o KFold aleatório vaza
 
 O erro agrupado por UF supõe que os erros de municípios de estados diferentes são independentes. Mas a divisa entre estados é uma linha no mapa: um município no sertão de Pernambuco pode se parecer mais com o vizinho do lado paraibano do que com a capital do próprio estado. Medi isso em `src/espacial.py`.
 
-Para cada município, peguei os 8 mais próximos pelo centroide (a mediana da distância até eles é 27 km) e comparei o resíduo do município com a média dos resíduos desses vizinhos. O I de Moran resume essa comparação numa escala de -1 a 1: perto de zero, os vizinhos não têm nada a ver um com o outro; perto de 1, vizinhos erram para o mesmo lado. O valor-p vem de 999 sorteios em que os resíduos trocam de lugar entre os municípios ao acaso.
+Para cada município, peguei os 8 mais próximos pelo centroide (a mediana da distância até eles é 27 km). O centroide de Vitória (ES) caía 100 km no mar, puxado pela ilha de Trindade, que faz parte do município; corrigi para o centro da parte continental, e um teste agora confere que todo ponto cai dentro do seu estado e comparei o resíduo do município com a média dos resíduos desses vizinhos. O I de Moran resume essa comparação numa escala de -1 a 1: perto de zero, os vizinhos não têm nada a ver um com o outro; perto de 1, vizinhos erram para o mesmo lado. O valor-p vem de 999 sorteios em que os resíduos trocam de lugar entre os municípios ao acaso.
 
 Em 2022 o I dos resíduos foi 0,475, e o maior valor entre os 999 sorteios foi 0,022. Com 5 e com 10 vizinhos, deu 0,506 e 0,460, então o resultado não depende da escolha de 8. A média dos vizinhos explica 46,0% da variação dos resíduos, bem mais que os 18,6% da UF. Tirando de cada resíduo a média do seu estado, o I ainda fica em 0,365. E olhando só os vizinhos do outro lado da divisa (1.309 municípios têm pelo menos um), a correlação entre o resíduo e a média desses vizinhos é 0,29. Parte disso vem do nível de cada estado; tirando a média da UF dos dois lados, fica em 0,22.
 
 Fiz duas checagens para ver se isso muda alguma conclusão.
 
-1. **Inferência.** Rodei a mesma regressão com o erro agrupado por grupos de municípios próximos, formados a partir das coordenadas e sem olhar a divisa (27 e 60 grupos). Usei t com G − 1 graus de liberdade, como na regressão principal, para comparar iguais. Os valores-p ficaram menores do que com a UF: 70 anos ou mais foi de 0,043 para 0,018 (27 grupos) e 0,0045 (60 grupos). A região Norte, que tinha 0,087 com a UF, fica em 0,071 com 27 grupos e 0,018 com 60: é a única mudança de lado do limite de 5%. As outras variáveis sem associação clara continuam sem. Mantive a UF como resultado principal porque é o agrupamento mais conservador.
-2. **Previsão.** Repeti a validação cruzada com os grupos espaciais no lugar da UF. O random forest teve R² de 0,43 com 27 grupos e 0,45 com 60, contra 0,33 deixando o estado inteiro de fora. O GroupKFold por UF continua sendo a validação mais severa. Não dá para dizer só com isso que a divisa pesa mais que a distância, porque os grupos por UF e os do k-means têm tamanhos e formas diferentes.
+1. **Inferência.** Rodei a mesma regressão com o erro agrupado por grupos de municípios próximos, formados a partir das coordenadas e sem olhar a divisa (27 e 60 grupos). Usei t com G − 1 graus de liberdade, como na regressão principal, para comparar iguais. Os valores-p ficaram menores do que com a UF: 70 anos ou mais foi de 0,043 para 0,018 (27 grupos) e 0,0038 (60 grupos). A região Norte, que tinha 0,087 com a UF, fica em 0,069 com 27 grupos e 0,017 com 60: é a única mudança de lado do limite de 5%. As outras variáveis sem associação clara continuam sem. Mantive a UF como resultado principal porque é o agrupamento mais conservador.
+2. **Previsão.** Repeti a validação cruzada com os grupos espaciais no lugar da UF. O random forest teve R² de 0,41 com 27 grupos e 0,48 com 60, contra 0,33 deixando o estado inteiro de fora. O GroupKFold por UF continua sendo a validação mais severa. Não dá para dizer só com isso que a divisa pesa mais que a distância, porque os grupos por UF e os do k-means têm tamanhos e formas diferentes.
 
 O que fica: há um padrão regional que o modelo não mede, e ele atravessa as divisas. Não ajustei um modelo espacial (de erro ou de defasagem espacial). Ele mudaria a pergunta e seria difícil de interpretar com segurança.
 
