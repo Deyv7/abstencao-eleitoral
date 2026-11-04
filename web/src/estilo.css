@@ -213,7 +213,6 @@ h2 { font-size: clamp(1.6rem, 2.6vw, 2.15rem); line-height: 1.12; }
   font-size: 11px; color: var(--tinta); padding: 4px 7px; border-radius: 6px;
   background: rgba(10, 12, 16, 0.72); border: 1px solid rgba(236, 230, 218, 0.14);
 }
-#rotulos span.ilha { font-size: 10px; color: var(--apagado); letter-spacing: 0.02em; }
 #rotulos span.nomeado.exemplo { border-color: rgba(242, 180, 76, 0.7); }
 
 /* ---------- dica do mouse ---------- */
